@@ -8,19 +8,21 @@ import StudyPlan from './components/StudyPlan';
 const ROUTES = {
   SIGN: '/',
   MENU: '/menu',
+  PLAN: '/StudyPlan'
 };
 
 function App() {
   return (
-    // <Router>
-    //   <Routes>
-    //     <Route path={ROUTES.SIGN} element={<Sign />} />
-    //     <Route path={ROUTES.MENU} element={<Menu />} />
-    //   </Routes>
-    // </Router>
-    <div>
-      <StudyPlan></StudyPlan>
-    </div>
+    <Router>
+      <Routes>
+        <Route path={ROUTES.SIGN} element={<Sign />} />
+        <Route path={ROUTES.MENU} element={<Menu />} />
+        <Route path={ROUTES.PLAN} element={<StudyPlan />} />
+      </Routes>
+    </Router>
+    // <div>
+    //   <StudyPlan></StudyPlan>
+    // </div>
   );
 }
 

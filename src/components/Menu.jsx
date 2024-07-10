@@ -6,6 +6,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
 import { keyframes } from '@emotion/react';
+import { useNavigate } from 'react-router-dom';  
 
 // Tema personalizado con paleta de colores azul y blanco
 const theme = createTheme({
@@ -75,7 +76,15 @@ const StyledButton = styled(Button)`
   }
 `;
 
+const ROUTES = {
+  SIGN: "/",
+  MENU: "/menu",
+  PLAN: "/studyplan"
+};
+
 const Menu = () => {
+  const navigate = useNavigate();
+
   // Estado para controlar si el Drawer está abierto o cerrado
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -86,11 +95,12 @@ const Menu = () => {
 
   // Manejadores de eventos para los ítems del Drawer
   const handleMatriculaClick = () => {
-    console.log('Matrícula');
+    console.log('Matrícula'); 
   };
 
   const handleCursosClick = () => {
     console.log('Cursos');
+    navigate(ROUTES.PLAN);
   };
 
   const handlePlanDeEstudiosClick = () => {

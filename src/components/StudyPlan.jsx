@@ -2,6 +2,7 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 
+
 const StudyPlan = () => {
   // Datos de ejemplo
   const rows = [
