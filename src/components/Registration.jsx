@@ -1,4 +1,3 @@
-// Importamos React y los módulos necesarios de Material UI
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Table from '@mui/material/Table';
@@ -8,6 +7,9 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import Button from '@mui/material/Button';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 
 // Creamos una celda de tabla estilizada usando la función styled de Material UI
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -35,35 +37,34 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 // Función para crear datos de ejemplo
-//
-function createData(Curso, Horario, Profesor, Codigo, protein) {
-  return { Curso, Horario, Profesor, Codigo, protein };
+function createData(Curso, Horario, Profesor, Codigo) {
+  return { Curso, Horario, Profesor, Codigo };
 }
 
-// Datos de ejemplo para llenar la tabla cada createData es una fila 
+// Datos de ejemplo para llenar la tabla
 const rows = [
-  
-  createData('BIS06', 'Estructuras De Datos', '5:00/7:30pm','Por Asignar' ),
-  createData('BIS03', 'Programacion I','7:45/10:15PM','Por Asignar'),
-  createData('Eclair', 262, 16.0, 24, 6.0),
-  createData('Cupcake', 305, 3.7, 67, 4.3),
-  createData('Gingerbread', 356, 16.0, 49, 3.9),
+  createData('BIS06', 'Estructuras De Datos', '5:00/7:30pm', 'Por Asignar'),
+  createData('Ice cream sandwich', 237, '5:00/7:30pm', 'John Doe'),
+  createData('Eclair', 262, '5:00/7:30pm', 'Jane Smith'),
+  createData('Cupcake', 305, '5:00/7:30pm', 'Emily Davis'),
+  createData('Gingerbread', 356, '5:00/7:30pm', 'Michael Brown'),
 ];
 
 // Componente principal que renderiza la tabla
-const StudyPlan = () => {
+const Registration = () => {
   return (
     // Contenedor de la tabla
     <TableContainer component={Paper}>
       {/* La tabla en sí */}
-      <Table sx={{ minWidth:  700 }} aria-label="customized table">
+      <Table sx={{ minWidth: 700 }} aria-label="customized table">
         {/* Cabecera de la tabla */}
         <TableHead>
           <TableRow>
             <StyledTableCell>Codigo</StyledTableCell>
             <StyledTableCell align="right">Nombre</StyledTableCell>
-            <StyledTableCell align="right">Creditos</StyledTableCell>
-            <StyledTableCell align="right">Cuatrimestre</StyledTableCell>
+            <StyledTableCell align="right">Horario</StyledTableCell>
+            <StyledTableCell align="right">Profesor</StyledTableCell>
+            <StyledTableCell align="right">Acciones</StyledTableCell>
           </TableRow>
         </TableHead>
         {/* Cuerpo de la tabla */}
@@ -77,6 +78,10 @@ const StudyPlan = () => {
               <StyledTableCell align="right">{row.Horario}</StyledTableCell>
               <StyledTableCell align="right">{row.Profesor}</StyledTableCell>
               <StyledTableCell align="right">{row.Codigo}</StyledTableCell>
+              <StyledTableCell align="right">
+                <Button color="success" startIcon={<CheckIcon />} />
+                <Button color="error" startIcon={<CloseIcon />} />
+              </StyledTableCell>
             </StyledTableRow>
           ))}
         </TableBody>
@@ -86,4 +91,4 @@ const StudyPlan = () => {
 };
 
 // Exportamos el componente para usarlo en otros lugares de la aplicación
-export default StudyPlan;
+export default Registration;

@@ -51,7 +51,7 @@ const rows = [
 ];
 
 // Componente principal que renderiza la tabla
-const StudyPlan = () => {
+const Courses = () => {
   return (
     // Contenedor de la tabla
     <TableContainer component={Paper}>
@@ -86,4 +86,4 @@ const StudyPlan = () => {
 };
 
 // Exportamos el componente para usarlo en otros lugares de la aplicación
-export default StudyPlan;
+export default Courses;

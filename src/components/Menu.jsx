@@ -79,7 +79,9 @@ const StyledButton = styled(Button)`
 const ROUTES = {
   SIGN: "/",
   MENU: "/menu",
-  PLAN: "/studyplan"
+  PLAN: "/studyplan",
+  REGISTRATION: "/registration",
+  COURSES: "/courses"
 };
 
 const Menu = () => {
@@ -95,16 +97,16 @@ const Menu = () => {
 
   // Manejadores de eventos para los ítems del Drawer
   const handleMatriculaClick = () => {
-    console.log('Matrícula'); 
+    navigate(ROUTES.REGISTRATION) 
   };
 
-  const handleCursosClick = () => {
+  const handlePlanClick = () => {
     console.log('Cursos');
     navigate(ROUTES.PLAN);
   };
 
-  const handlePlanDeEstudiosClick = () => {
-    console.log('Plan de Estudios');
+  const handleCursosClick = () => {
+    navigate(ROUTES.COURSES);
   };
 
   return (
@@ -132,8 +134,8 @@ const Menu = () => {
             {/* Lista de opciones en el Drawer */}
             {[
               { text: 'Matrícula', onClick: handleMatriculaClick },
-              { text: 'Cursos', onClick: handleCursosClick },
-              { text: 'Plan de Estudios', onClick: handlePlanDeEstudiosClick },
+              { text: 'Cursos',  },
+              { text: 'Plan de Estudios', },
             ].map((item, index) => (
               // Cada ítem es un ListItem que ejecuta la función onClick correspondiente
               <ListItem button key={index} onClick={item.onClick}>
@@ -174,7 +176,7 @@ const Menu = () => {
             </StyledButton>
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
-            <StyledButton variant="contained" color="primary" onClick={handlePlanDeEstudiosClick} fullWidth>
+            <StyledButton variant="contained" color="primary" onClick={handlePlanClick} fullWidth>
               Plan de Estudios
             </StyledButton>
           </Grid>
