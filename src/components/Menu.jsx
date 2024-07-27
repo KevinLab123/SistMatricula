@@ -96,14 +96,21 @@ const Menu = () => {
     setDrawerOpen(open);
   };
 
+  // Leer perfil del usuario desde localStorage
+  const userProfile = localStorage.getItem('userProfile');
+
+
   // Manejadores de eventos para los ítems del Drawer
   const handleMatriculaClick = () => {
     navigate(ROUTES.PLAN_ADMIN) 
   };
 
   const handlePlanClick = () => {
-    console.log('Cursos');
-    navigate(ROUTES.PLAN);
+    if (userProfile === 'academico1@ulatina.net') {
+      navigate(ROUTES.PLAN_ADMIN);
+    } else {
+      navigate(ROUTES.PLAN);
+    }
   };
 
   const handleCursosClick = () => {
