@@ -5,6 +5,7 @@ import Menu from './components/Menu';
 import StudyPlan from './components/StudyPlan';
 import Registration from './components/Registration';
 import Courses from './components/Courses';
+import StudyAdm from './components/StudyAdm';
 
 // Enrutamiento
 const ROUTES = {
@@ -12,7 +13,8 @@ const ROUTES = {
   MENU: '/menu',
   PLAN: '/StudyPlan',
   REGISTRATION: '/Registration',
-  COURSES: '/Courses'
+  COURSES: '/Courses',
+  PLAN_ADMIN: '/StudyAdm'
 };
 
 function App() {
@@ -24,6 +26,7 @@ function App() {
         <Route path={ROUTES.PLAN} element={<StudyPlan />} />
         <Route path={ROUTES.REGISTRATION} element={<Registration />} />
         <Route path={ROUTES.COURSES} element=  {<Courses />} />
+        <Route path={ROUTES.PLAN_ADMIN} element=  {<StudyAdm />} />
       </Routes>
     </Router>
     // <div>

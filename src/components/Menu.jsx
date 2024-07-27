@@ -81,7 +81,8 @@ const ROUTES = {
   MENU: "/menu",
   PLAN: "/studyplan",
   REGISTRATION: "/registration",
-  COURSES: "/courses"
+  COURSES: "/courses",
+  PLAN_ADMIN: '/StudyAdm'
 };
 
 const Menu = () => {
@@ -97,7 +98,7 @@ const Menu = () => {
 
   // Manejadores de eventos para los ítems del Drawer
   const handleMatriculaClick = () => {
-    navigate(ROUTES.REGISTRATION) 
+    navigate(ROUTES.PLAN_ADMIN) 
   };
 
   const handlePlanClick = () => {
