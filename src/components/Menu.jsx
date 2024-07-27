@@ -6,7 +6,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
 import { keyframes } from '@emotion/react';
-import { useNavigate } from 'react-router-dom';  
+import { useNavigate } from 'react-router-dom';
 
 // Tema personalizado con paleta de colores azul y blanco
 const theme = createTheme({
@@ -82,7 +82,8 @@ const ROUTES = {
   PLAN: "/studyplan",
   REGISTRATION: "/registration",
   COURSES: "/courses",
-  PLAN_ADMIN: '/StudyAdm'
+  PLAN_ADMIN: '/StudyAdm',
+  STUDENTS: '/Students'
 };
 
 const Menu = () => {
@@ -99,10 +100,9 @@ const Menu = () => {
   // Leer perfil del usuario desde localStorage
   const userProfile = localStorage.getItem('userProfile');
 
-
   // Manejadores de eventos para los ítems del Drawer
   const handleMatriculaClick = () => {
-    navigate(ROUTES.PLAN_ADMIN) 
+    navigate(ROUTES.STUDENTS);
   };
 
   const handlePlanClick = () => {
@@ -115,6 +115,10 @@ const Menu = () => {
 
   const handleCursosClick = () => {
     navigate(ROUTES.COURSES);
+  };
+
+  const handleEstudiantesClick = () => {
+    navigate(ROUTES.STUDENTS);
   };
 
   return (
@@ -142,13 +146,17 @@ const Menu = () => {
             {/* Lista de opciones en el Drawer */}
             {[
               { text: 'Matrícula', onClick: handleMatriculaClick },
-              { text: 'Cursos',  },
-              { text: 'Plan de Estudios', },
+              { text: 'Cursos', onClick: handleCursosClick },
+              { text: 'Plan de Estudios', onClick: handlePlanClick },
+              // Condicionalmente renderizar el botón "Estudiantes"
+              userProfile === 'admin@ulatina.net' && { text: 'Estudiantes', onClick: handleEstudiantesClick },
             ].map((item, index) => (
-              // Cada ítem es un ListItem que ejecuta la función onClick correspondiente
-              <ListItem button key={index} onClick={item.onClick}>
-                <ListItemText primary={item.text} />
-              </ListItem>
+              // Verificar que el item no sea falso antes de renderizar
+              item && (
+                <ListItem button key={index} onClick={item.onClick}>
+                  <ListItemText primary={item.text} />
+                </ListItem>
+              )
             ))}
           </List>
         </StyledDrawer>
@@ -188,6 +196,14 @@ const Menu = () => {
               Plan de Estudios
             </StyledButton>
           </Grid>
+          {/* Condicionalmente renderizar el botón "Estudiantes" */}
+          {userProfile === 'admin@ulatina.net' && (
+            <Grid item xs={12} sm={6} md={4}>
+              <StyledButton variant="contained" color="primary" onClick={handleEstudiantesClick} fullWidth>
+                Estudiantes
+              </StyledButton>
+            </Grid>
+          )}
         </Grid>
       </StyledContainer>
     </ThemeProvider>
