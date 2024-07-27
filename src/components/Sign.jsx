@@ -1,105 +1,122 @@
-import React from "react";
-import {Container,Box,Grid,TextField,Button,Typography,} from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { Container, Box, Grid, TextField, Button, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabase/client'; // Asegúrate de que la ruta sea correcta
 
-//Definicion local de rutas
+// Definición local de rutas
 const ROUTES = {
-  SIGN: "/",
-  MENU: "/menu",
+  SIGN: '/',
+  MENU: '/menu',
 };
 
 function Sign() {
-  // Definicion de estilos
+  // Definición de estilos
   const styles = {
     container: {
-      height: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
+      height: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
       background:
-        "linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1))",
+        'linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1))',
     },
     card: {
-      background: "#fff",
-      borderRadius: "1rem",
-      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-      maxWidth: "900px",
-      overflow: "hidden",
-      display: "flex",
+      background: '#fff',
+      borderRadius: '1rem',
+      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      maxWidth: '900px',
+      overflow: 'hidden',
+      display: 'flex',
     },
     image: {
-      width: "100%",
-      height: "auto",
+      width: '100%',
+      height: 'auto',
     },
     formCol: {
-      padding: "2rem",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
+      padding: '2rem',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
     },
   };
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const navigate = useNavigate();
 
-  //Constante que enruta al menu principal
-  const handleLogin = () => {
-    navigate(ROUTES.MENU);
+  // Función de inicio de sesión
+  const handleLogin = async () => {
+    setLoading(true);
+    setError(null);
+
+    const { data, error } = await supabase
+      .from('Perfiles')
+      .select('*')
+      .eq('Email', email)
+      .eq('Contraseña', password)
+      .single(); // Usar single() para obtener un solo registro
+
+    if (error) {
+      setError('Credenciales incorrectas.');
+    } else if (data) {
+      // Si el usuario existe, redirige al menú
+      navigate(ROUTES.MENU);
+    } else {
+      setError('Credenciales incorrectas.');
+    }
+
+    setLoading(false);
   };
 
   return (
-    //Se aplican los estilos al todo lo que esta dentro de la etiqueta de contenedor(Imagen)
     <Container style={styles.container}>
-      {/* Conetenedor box que actua como div para almacenar las etiquetas */}
       <Box style={styles.card}>
-        {/* Almacena las etiquetas que necesitan ser responsivas */}
         <Grid container>
-          {/* Configuracion de resposividad  de la imagen */}
           <Grid item xs={12} md={6}>
-            {/* logo de la universidad */}
             <img
               src="https://th.bing.com/th/id/R.4d9c17e6ccb0b763477d5a67a9498c2c?rik=4anFrNkpURgzkQ&pid=ImgRaw&r=0"
               alt="Phone"
               style={styles.image}
             />
           </Grid>
-          {/* Configuracion de responsividad del titulo, inputs y boton*/}
           <Grid item xs={12} md={6} style={styles.formCol}>
-            {/* Titulo principal */}
             <Typography variant="h4" gutterBottom>
               Ingresa tus credenciales
             </Typography>
-            {/* Espacio de captura de texto Correo Institucional */}
             <TextField
               label="Correo Institucional"
               variant="outlined"
               margin="normal"
               fullWidth
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
-            {/* Espacio de captura de texto de password */}
             <TextField
-              label="Contrasena"
+              label="Contraseña"
               variant="outlined"
               type="password"
               margin="normal"
               fullWidth
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
-            {/* Boton de ingresar los credenciales */}
+            {error && <Typography color="error">{error}</Typography>}
             <Button
               variant="contained"
               color="primary"
               fullWidth
               size="large"
               onClick={handleLogin}
+              disabled={loading}
             >
-              Ingresar
+              {loading ? 'Ingresando...' : 'Ingresar'}
             </Button>
-            {/* Cierre de contenedor de config de responsividad de img,iput y boton */}
           </Grid>
-          {/* Cierre de contenedor de responsividad */}
         </Grid>
-        {/*Cierre de espacio para muestreo de etiquetas */}
       </Box>
-      {/* Cierre de contenedor principal */}
     </Container>
   );
 }
