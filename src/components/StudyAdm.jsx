@@ -87,6 +87,13 @@ const StudyAdm = () => {
       console.error("Error adding course:", error);
     } else {
       setCourses([...courses, cleanedCourse]);
+      setNewCourse({
+        Codigo: "",
+        Nombre: "",
+        Descripción: "",
+        Créditos: "",
+        Nombre_Carrera: "Ingenieria en Sistemas",
+      });
       setOpen(false);
     }
   };

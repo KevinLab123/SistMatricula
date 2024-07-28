@@ -9,6 +9,16 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import CheckIcon from '@mui/icons-material/Check';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import Grid from '@mui/material/Grid';
+import TextField from '@mui/material/TextField';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
 import { supabase } from '../supabase/client';
 import { useEffect, useState } from 'react';
 
@@ -35,6 +45,20 @@ const Registration = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [selectedCourseId, setSelectedCourseId] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [cardDetails, setCardDetails] = useState({
+    encargado: '',
+    numeroTarjeta: '',
+    vencimiento: '',
+    cvv: '',
+  });
+  const [transferDetails, setTransferDetails] = useState({
+    cedula: '',
+    iban: '',
+    monto: '',
+  });
 
   const fetchCourses = async () => {
     setLoading(true);
@@ -46,7 +70,6 @@ const Registration = () => {
       return;
     }
 
-    // Obtener los cursos en los que el usuario ya está matriculado
     const { data: enrolledCourses, error: enrollmentError } = await supabase
       .from('Matrículas')
       .select('curso_id')
@@ -61,7 +84,6 @@ const Registration = () => {
 
     const enrolledCourseIds = enrolledCourses.map((matricula) => matricula.curso_id);
 
-    // Obtener todos los cursos disponibles
     const { data, error } = await supabase
       .from('Clases')
       .select('grupo_id, curso_id, aula, horario, precio');
@@ -86,7 +108,6 @@ const Registration = () => {
       });
 
       const coursesWithNames = await Promise.all(coursePromises);
-      // Filtrar los cursos para excluir los ya matriculados
       const availableCourses = coursesWithNames.filter(
         (course) => !enrolledCourseIds.includes(course.curso_id)
       );
@@ -95,30 +116,62 @@ const Registration = () => {
     setLoading(false);
   };
 
-  const handleRegister = async (curso_id) => {
-    const confirmation = window.confirm('¿Estás seguro de que quieres matricularte en este curso?');
+  const handleRegisterClick = (curso_id) => {
+    setSelectedCourseId(curso_id);
+    setOpen(true);
+  };
 
-    if (confirmation) {
-      const userId = localStorage.getItem('userId');
+  const handleRegister = async () => {
+    const userId = localStorage.getItem('userId');
 
-      if (!userId) {
-        alert('Error: No se encontró el ID del usuario.');
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('Matrículas')
-        .insert([{ estudiante_id: userId, curso_id }]);
-
-      if (error) {
-        console.error('Error creating matrícula:', error);
-        alert('Error al crear la matrícula.');
-      } else {
-        alert('Matrícula creada con éxito.');
-        // Refrescar la lista de cursos para actualizar la tabla
-        fetchCourses();
-      }
+    if (!userId) {
+      alert('Error: No se encontró el ID del usuario.');
+      return;
     }
+
+    const { data, error } = await supabase
+      .from('Matrículas')
+      .insert([{ estudiante_id: userId, curso_id: selectedCourseId }]);
+
+    if (error) {
+      console.error('Error creating matrícula:', error);
+      alert('Error al crear la matrícula.');
+    } else {
+      alert('Matrícula creada con éxito.');
+      fetchCourses();
+      setOpen(false);
+    }
+  };
+
+  const handlePaymentMethodChange = (method) => {
+    setPaymentMethod(method);
+  };
+
+  const handleCardDetailsChange = (event) => {
+    setCardDetails({
+      ...cardDetails,
+      [event.target.name]: event.target.value,
+    });
+  };
+
+  const handleTransferDetailsChange = (event) => {
+    setTransferDetails({
+      ...transferDetails,
+      [event.target.name]: event.target.value,
+    });
+  };
+
+  const isCardDetailsValid = () => {
+    return (
+      cardDetails.encargado &&
+      cardDetails.numeroTarjeta &&
+      cardDetails.vencimiento &&
+      cardDetails.cvv
+    );
+  };
+
+  const isTransferDetailsValid = () => {
+    return transferDetails.cedula && transferDetails.iban && transferDetails.monto;
   };
 
   useEffect(() => {
@@ -157,7 +210,7 @@ const Registration = () => {
                 <Button
                   color="success"
                   startIcon={<CheckIcon />}
-                  onClick={() => handleRegister(course.curso_id)}
+                  onClick={() => handleRegisterClick(course.curso_id)}
                 >
                   Matricularse
                 </Button>
@@ -166,6 +219,123 @@ const Registration = () => {
           ))}
         </TableBody>
       </Table>
+
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>Seleccionar Método de Pago</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Por favor seleccione su método de pago y complete la información requerida.
+          </DialogContentText>
+          <ButtonGroup variant="contained" fullWidth sx={{ mt: 2 }}>
+            <Button onClick={() => handlePaymentMethodChange('tarjeta')}>Tarjeta</Button>
+            <Button onClick={() => handlePaymentMethodChange('transferencia')}>Transferencia</Button>
+          </ButtonGroup>
+
+          {paymentMethod === 'tarjeta' && (
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h6" gutterBottom>
+                Pago con Tarjeta
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Nombre del Encargado"
+                    variant="outlined"
+                    name="encargado"
+                    value={cardDetails.encargado}
+                    onChange={handleCardDetailsChange}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Número de Tarjeta"
+                    variant="outlined"
+                    name="numeroTarjeta"
+                    value={cardDetails.numeroTarjeta}
+                    onChange={handleCardDetailsChange}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    label="Fecha de Vencimiento"
+                    variant="outlined"
+                    name="vencimiento"
+                    value={cardDetails.vencimiento}
+                    onChange={handleCardDetailsChange}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    label="Código de Seguridad (CVV)"
+                    variant="outlined"
+                    name="cvv"
+                    value={cardDetails.cvv}
+                    onChange={handleCardDetailsChange}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+          )}
+
+          {paymentMethod === 'transferencia' && (
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h6" gutterBottom>
+                Pago por Transferencia
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Cédula"
+                    variant="outlined"
+                    name="cedula"
+                    value={transferDetails.cedula}
+                    onChange={handleTransferDetailsChange}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Número de Cuenta IBAN"
+                    variant="outlined"
+                    name="iban"
+                    value={transferDetails.iban}
+                    onChange={handleTransferDetailsChange}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Monto a Pagar"
+                    variant="outlined"
+                    name="monto"
+                    value={transferDetails.monto}
+                    onChange={handleTransferDetailsChange}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button
+            onClick={handleRegister}
+            color="success"
+            disabled={
+              !paymentMethod ||
+              (paymentMethod === 'tarjeta' && !isCardDetailsValid()) ||
+              (paymentMethod === 'transferencia' && !isTransferDetailsValid())
+            }
+          >
+            Confirmar Matrícula
+          </Button>
+        </DialogActions>
+      </Dialog>
     </TableContainer>
   );
 };
