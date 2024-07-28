@@ -81,7 +81,8 @@ const ROUTES = {
   SIGN: "/",
   MENU: "/menu",
   PLAN: "/studyplan",
-  REGISTRATION: "/registration",
+  REGISTRATION: '/Registration',
+  REGISTRATIONADM: '/RegistrationAdm',
   COURSES: "/courses",
   PLAN_ADMIN: '/StudyAdm',
   STUDENTS: '/Students'
@@ -138,7 +139,11 @@ const Menu = () => {
 
   // Manejadores de eventos para los ítems del Drawer
   const handleMatriculaClick = () => {
+    if (userProfile === 'academico1@ulatina.net') {
+    navigate(ROUTES.REGISTRATIONADM);
+  } else {
     navigate(ROUTES.REGISTRATION);
+  }
   };
 
   const handlePlanClick = () => {
