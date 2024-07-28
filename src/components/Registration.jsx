@@ -9,78 +9,158 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
+import { supabase } from '../supabase/client';
+import { useEffect, useState } from 'react';
 
-// Creamos una celda de tabla estilizada usando la función styled de Material UI
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  // Estilo para las celdas de la cabecera
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
   },
-  // Estilo para las celdas del cuerpo
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
   },
 }));
 
-// Creamos una fila de tabla estilizada usando la función styled de Material UI
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  // Estilo para las filas impares
   '&:nth-of-type(odd)': {
     backgroundColor: theme.palette.action.hover,
   },
-  // Ocultamos el borde de la última celda
   '&:last-child td, &:last-child th': {
     border: 0,
   },
 }));
 
-// Función para crear datos de ejemplo
-function createData(Curso, Horario, Profesor, Codigo) {
-  return { Curso, Horario, Profesor, Codigo };
-}
-
-// Datos de ejemplo para llenar la tabla
-const rows = [
-  createData('BIS06', 'Estructuras De Datos', '5:00/7:30pm', 'Por Asignar'),
-  createData('Ice cream sandwich', 237, '5:00/7:30pm', 'John Doe'),
-  createData('Eclair', 262, '5:00/7:30pm', 'Jane Smith'),
-  createData('Cupcake', 305, '5:00/7:30pm', 'Emily Davis'),
-  createData('Gingerbread', 356, '5:00/7:30pm', 'Michael Brown'),
-];
-
-// Componente principal que renderiza la tabla
 const Registration = () => {
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchCourses = async () => {
+    setLoading(true);
+    const userId = localStorage.getItem('userId');
+
+    if (!userId) {
+      setError('Error: No se encontró el ID del usuario.');
+      setLoading(false);
+      return;
+    }
+
+    // Obtener los cursos en los que el usuario ya está matriculado
+    const { data: enrolledCourses, error: enrollmentError } = await supabase
+      .from('Matrículas')
+      .select('curso_id')
+      .eq('estudiante_id', userId);
+
+    if (enrollmentError) {
+      setError(enrollmentError.message);
+      console.error('Error fetching enrolled courses:', enrollmentError);
+      setLoading(false);
+      return;
+    }
+
+    const enrolledCourseIds = enrolledCourses.map((matricula) => matricula.curso_id);
+
+    // Obtener todos los cursos disponibles
+    const { data, error } = await supabase
+      .from('Clases')
+      .select('grupo_id, curso_id, aula, horario, precio');
+
+    if (error) {
+      setError(error.message);
+      console.error('Error fetching courses:', error);
+    } else {
+      const coursePromises = data.map(async (course) => {
+        const { data: courseData, error: courseError } = await supabase
+          .from('Cursos')
+          .select('Nombre')
+          .eq('Codigo', course.curso_id)
+          .single();
+
+        if (courseError) {
+          console.error('Error fetching course name:', courseError);
+          return { ...course, nombre_curso: 'Desconocido' };
+        }
+
+        return { ...course, nombre_curso: courseData ? courseData.Nombre : 'Desconocido' };
+      });
+
+      const coursesWithNames = await Promise.all(coursePromises);
+      // Filtrar los cursos para excluir los ya matriculados
+      const availableCourses = coursesWithNames.filter(
+        (course) => !enrolledCourseIds.includes(course.curso_id)
+      );
+      setCourses(availableCourses);
+    }
+    setLoading(false);
+  };
+
+  const handleRegister = async (curso_id) => {
+    const confirmation = window.confirm('¿Estás seguro de que quieres matricularte en este curso?');
+
+    if (confirmation) {
+      const userId = localStorage.getItem('userId');
+
+      if (!userId) {
+        alert('Error: No se encontró el ID del usuario.');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('Matrículas')
+        .insert([{ estudiante_id: userId, curso_id }]);
+
+      if (error) {
+        console.error('Error creating matrícula:', error);
+        alert('Error al crear la matrícula.');
+      } else {
+        alert('Matrícula creada con éxito.');
+        // Refrescar la lista de cursos para actualizar la tabla
+        fetchCourses();
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
+
   return (
-    // Contenedor de la tabla
     <TableContainer component={Paper}>
-      {/* La tabla en sí */}
       <Table sx={{ minWidth: 700 }} aria-label="customized table">
-        {/* Cabecera de la tabla */}
         <TableHead>
           <TableRow>
-            <StyledTableCell>Codigo</StyledTableCell>
-            <StyledTableCell align="right">Nombre</StyledTableCell>
+            <StyledTableCell>Grupo</StyledTableCell>
+            <StyledTableCell align="right">Nombre del Curso</StyledTableCell>
+            <StyledTableCell align="right">ID de Curso</StyledTableCell>
+            <StyledTableCell align="right">Aula</StyledTableCell>
             <StyledTableCell align="right">Horario</StyledTableCell>
-            <StyledTableCell align="right">Profesor</StyledTableCell>
+            <StyledTableCell align="right">Precio</StyledTableCell>
             <StyledTableCell align="right">Acciones</StyledTableCell>
           </TableRow>
         </TableHead>
-        {/* Cuerpo de la tabla */}
         <TableBody>
-          {rows.map((row) => (
-            // Renderizamos cada fila de datos
-            <StyledTableRow key={row.Curso}>
+          {courses.map((course, index) => (
+            <StyledTableRow key={index}>
               <StyledTableCell component="th" scope="row">
-                {row.Curso}
+                {course.grupo_id}
               </StyledTableCell>
-              <StyledTableCell align="right">{row.Horario}</StyledTableCell>
-              <StyledTableCell align="right">{row.Profesor}</StyledTableCell>
-              <StyledTableCell align="right">{row.Codigo}</StyledTableCell>
+              <StyledTableCell align="right">{course.nombre_curso}</StyledTableCell>
+              <StyledTableCell align="right">{course.curso_id}</StyledTableCell>
+              <StyledTableCell align="right">{course.aula}</StyledTableCell>
+              <StyledTableCell align="right">{course.horario}</StyledTableCell>
+              <StyledTableCell align="right">{course.precio}</StyledTableCell>
               <StyledTableCell align="right">
-                <Button color="success" startIcon={<CheckIcon />} />
-                <Button color="error" startIcon={<CloseIcon />} />
+                <Button
+                  color="success"
+                  startIcon={<CheckIcon />}
+                  onClick={() => handleRegister(course.curso_id)}
+                >
+                  Matricularse
+                </Button>
               </StyledTableCell>
             </StyledTableRow>
           ))}
@@ -90,5 +170,4 @@ const Registration = () => {
   );
 };
 
-// Exportamos el componente para usarlo en otros lugares de la aplicación
 export default Registration;

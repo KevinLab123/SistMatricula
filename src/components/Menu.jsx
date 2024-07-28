@@ -102,7 +102,7 @@ const Menu = () => {
 
   // Manejadores de eventos para los ítems del Drawer
   const handleMatriculaClick = () => {
-    navigate(ROUTES.STUDENTS);
+    navigate(ROUTES.REGISTRATION);
   };
 
   const handlePlanClick = () => {

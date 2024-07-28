@@ -62,9 +62,11 @@ function Sign() {
     if (error) {
       setError('Credenciales incorrectas.');
     } else if (data) {
-      // Si el usuario existe, redirige al menú
+      // Si el usuario existe, guarda el email y el id en local storage y redirige al menú
       const userProfile = data.Email;
+      const userId = data.id;
       localStorage.setItem('userProfile', userProfile);
+      localStorage.setItem('userId', userId);
       navigate(ROUTES.MENU);
     } else {
       setError('Credenciales incorrectas.');

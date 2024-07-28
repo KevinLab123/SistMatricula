@@ -1,14 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from '../supabase/client'; // Asegúrate de que la ruta sea correcta
-import { styled } from '@mui/material/styles';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell, { tableCellClasses } from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import { Button, Box, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import React, { useEffect, useState } from "react";
+import { supabase } from "../supabase/client"; // Asegúrate de que la ruta sea correcta
+import { styled } from "@mui/material/styles";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell, { tableCellClasses } from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
+import {
+  Button,
+  Box,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from "@mui/material";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -21,10 +29,10 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  '&:nth-of-type(odd)': {
+  "&:nth-of-type(odd)": {
     backgroundColor: theme.palette.action.hover,
   },
-  '&:last-child td, &:last-child th': {
+  "&:last-child td, &:last-child th": {
     border: 0,
   },
 }));
@@ -36,41 +44,49 @@ const StudyAdm = () => {
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newCourse, setNewCourse] = useState({
-    Codigo: '',
-    Nombre: '',
-    Descripción: '',
-    Créditos: '',
-    Nombre_Carrera: 'Ingeniería en Sistemas'
+    Codigo: "",
+    Nombre: "",
+    Descripción: "",
+    Créditos: "",
+    Nombre_Carrera: "Ingenieria en Sistemas",
   });
-  const [deleteCourseCode, setDeleteCourseCode] = useState('');
+  const [deleteCourseCode, setDeleteCourseCode] = useState("");
 
   const fetchCourses = async () => {
     setLoading(true);
 
     const { data, error } = await supabase
-      .from('Cursos')
-      .select('Codigo, Nombre, Descripción, Créditos, Nombre_Carrera');
+      .from("Cursos")
+      .select("Codigo, Nombre, Descripción, Créditos, Nombre_Carrera");
 
     if (error) {
       setError(error.message);
-      console.error('Error fetching courses:', error);
+      console.error("Error fetching courses:", error);
     } else {
-      console.log('Fetched data:', data); // Verifica los datos obtenidos
+      console.log("Fetched data:", data); // Verifica los datos obtenidos
       setCourses(data);
     }
     setLoading(false);
   };
 
   const handleAddCourse = async () => {
+    const cleanedCourse = {
+      ...newCourse,
+      Codigo: newCourse.Codigo.trim(),
+      Nombre: newCourse.Nombre.trim(),
+      Descripción: newCourse.Descripción.trim(),
+      Créditos: newCourse.Créditos.trim(),
+    };
+
     const { data, error } = await supabase
-      .from('Cursos')
-      .insert([newCourse]);
+      .from("Cursos")
+      .insert([cleanedCourse]);
 
     if (error) {
       setError(error.message);
-      console.error('Error adding course:', error);
+      console.error("Error adding course:", error);
     } else {
-      setCourses([...courses, newCourse]);
+      setCourses([...courses, cleanedCourse]);
       setOpen(false);
     }
   };
@@ -81,16 +97,18 @@ const StudyAdm = () => {
 
   const handleDeleteCourse = async () => {
     const { data, error } = await supabase
-      .from('Cursos')
+      .from("Cursos")
       .delete()
-      .eq('Codigo', deleteCourseCode);
+      .eq("Codigo", deleteCourseCode);
 
     if (error) {
       setError(error.message);
-      console.error('Error deleting course:', error);
+      console.error("Error deleting course:", error);
     } else {
-      setCourses(courses.filter(course => course.Codigo !== deleteCourseCode));
-      setDeleteCourseCode('');
+      setCourses(
+        courses.filter((course) => course.Codigo !== deleteCourseCode)
+      );
+      setDeleteCourseCode("");
       setConfirmDelete(false);
     }
   };
@@ -144,7 +162,11 @@ const StudyAdm = () => {
         marginTop={2}
         padding={2}
       >
-        <Button variant="contained" color="success" onClick={() => setOpen(true)}>
+        <Button
+          variant="contained"
+          color="success"
+          onClick={() => setOpen(true)}
+        >
           Agregar
         </Button>
       </Box>
@@ -158,28 +180,36 @@ const StudyAdm = () => {
             label="Codigo"
             fullWidth
             value={newCourse.Codigo}
-            onChange={(e) => setNewCourse({ ...newCourse, Codigo: e.target.value })}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, Codigo: e.target.value })
+            }
           />
           <TextField
             margin="dense"
             label="Nombre"
             fullWidth
             value={newCourse.Nombre}
-            onChange={(e) => setNewCourse({ ...newCourse, Nombre: e.target.value })}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, Nombre: e.target.value })
+            }
           />
           <TextField
             margin="dense"
             label="Descripción"
             fullWidth
             value={newCourse.Descripción}
-            onChange={(e) => setNewCourse({ ...newCourse, Descripción: e.target.value })}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, Descripción: e.target.value })
+            }
           />
           <TextField
             margin="dense"
             label="Créditos"
             fullWidth
             value={newCourse.Créditos}
-            onChange={(e) => setNewCourse({ ...newCourse, Créditos: e.target.value })}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, Créditos: e.target.value })
+            }
           />
           <TextField
             margin="dense"
@@ -221,7 +251,10 @@ const StudyAdm = () => {
       <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
         <DialogTitle>Confirmar Eliminación</DialogTitle>
         <DialogContent>
-          <p>¿Estás seguro de que deseas eliminar el curso con código {deleteCourseCode}?</p>
+          <p>
+            ¿Estás seguro de que deseas eliminar el curso con código{" "}
+            {deleteCourseCode}?
+          </p>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmDelete(false)} color="primary">
