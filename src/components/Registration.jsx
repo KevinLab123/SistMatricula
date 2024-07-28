@@ -19,6 +19,7 @@ import TextField from '@mui/material/TextField';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+import Checkbox from '@mui/material/Checkbox';
 import { supabase } from '../supabase/client';
 import { useEffect, useState } from 'react';
 
@@ -46,7 +47,7 @@ const Registration = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
-  const [selectedCourseId, setSelectedCourseId] = useState(null);
+  const [selectedCourses, setSelectedCourses] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [cardDetails, setCardDetails] = useState({
     encargado: '',
@@ -116,30 +117,55 @@ const Registration = () => {
     setLoading(false);
   };
 
-  const handleRegisterClick = (curso_id) => {
-    setSelectedCourseId(curso_id);
+  const handleCheckboxChange = (course) => {
+    const isSelected = selectedCourses.some(selected => selected.curso_id === course.curso_id);
+    let newSelectedCourses;
+    if (isSelected) {
+      newSelectedCourses = selectedCourses.filter(selected => selected.curso_id !== course.curso_id);
+    } else {
+      newSelectedCourses = [...selectedCourses, course];
+    }
+    setSelectedCourses(newSelectedCourses);
+  };
+
+  const handleRegisterClick = () => {
     setOpen(true);
   };
 
   const handleRegister = async () => {
     const userId = localStorage.getItem('userId');
-
+  
     if (!userId) {
       alert('Error: No se encontró el ID del usuario.');
       return;
     }
-
+  
+    // Verifica que hay cursos seleccionados
+    if (selectedCourses.length === 0) {
+      alert('Por favor, selecciona al menos un curso para matricular.');
+      return;
+    }
+  
+    // Construir el array de matrículas
+    const matriculas = selectedCourses.map(course => ({
+      estudiante_id: userId,
+      curso_id: course.curso_id,
+    }));
+  
+    // Insertar matrículas en Supabase
     const { data, error } = await supabase
       .from('Matrículas')
-      .insert([{ estudiante_id: userId, curso_id: selectedCourseId }]);
-
+      .insert(matriculas);
+  
+    // Manejo de errores detallado
     if (error) {
       console.error('Error creating matrícula:', error);
-      alert('Error al crear la matrícula.');
+      alert(`Error al crear la matrícula: ${error.message}`);
     } else {
       alert('Matrícula creada con éxito.');
-      fetchCourses();
-      setOpen(false);
+      fetchCourses(); // Refrescar la lista de cursos
+      setOpen(false); // Cerrar el diálogo
+      setSelectedCourses([]); // Limpiar selección
     }
   };
 
@@ -178,6 +204,8 @@ const Registration = () => {
     fetchCourses();
   }, []);
 
+  const totalPrice = selectedCourses.reduce((sum, course) => sum + course.precio, 0);
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
 
@@ -192,7 +220,7 @@ const Registration = () => {
             <StyledTableCell align="right">Aula</StyledTableCell>
             <StyledTableCell align="right">Horario</StyledTableCell>
             <StyledTableCell align="right">Precio</StyledTableCell>
-            <StyledTableCell align="right">Acciones</StyledTableCell>
+            <StyledTableCell align="right">Seleccionar</StyledTableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -207,18 +235,26 @@ const Registration = () => {
               <StyledTableCell align="right">{course.horario}</StyledTableCell>
               <StyledTableCell align="right">{course.precio}</StyledTableCell>
               <StyledTableCell align="right">
-                <Button
-                  color="success"
-                  startIcon={<CheckIcon />}
-                  onClick={() => handleRegisterClick(course.curso_id)}
-                >
-                  Matricularse
-                </Button>
+                <Checkbox
+                  checked={selectedCourses.some(selected => selected.curso_id === course.curso_id)}
+                  onChange={() => handleCheckboxChange(course)}
+                />
               </StyledTableCell>
             </StyledTableRow>
           ))}
         </TableBody>
       </Table>
+      <Box sx={{ p: 2 }}>
+        <Typography variant="h6">Total a Pagar: {totalPrice}</Typography>
+        <Button
+          color="success"
+          startIcon={<CheckIcon />}
+          onClick={handleRegisterClick}
+          disabled={selectedCourses.length === 0}
+        >
+          Confirmar Matrícula
+        </Button>
+      </Box>
 
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Seleccionar Método de Pago</DialogTitle>
