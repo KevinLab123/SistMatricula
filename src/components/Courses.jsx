@@ -1,4 +1,3 @@
-// Importamos React y los módulos necesarios de Material UI
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Table from '@mui/material/Table';
@@ -8,75 +7,132 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import { supabase } from '../supabase/client';
+import { useEffect, useState } from 'react';
 
-// Creamos una celda de tabla estilizada usando la función styled de Material UI
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  // Estilo para las celdas de la cabecera
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
     color: theme.palette.common.white,
   },
-  // Estilo para las celdas del cuerpo
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
   },
 }));
 
-// Creamos una fila de tabla estilizada usando la función styled de Material UI
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  // Estilo para las filas impares
   '&:nth-of-type(odd)': {
     backgroundColor: theme.palette.action.hover,
   },
-  // Ocultamos el borde de la última celda
   '&:last-child td, &:last-child th': {
     border: 0,
   },
 }));
 
-// Función para crear datos de ejemplo
-//
-function createData(Curso, Horario, Profesor, Codigo, protein) {
-  return { Curso, Horario, Profesor, Codigo, protein };
-}
+const EnrolledCourses = () => {
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-// Datos de ejemplo para llenar la tabla cada createData es una fila 
-const rows = [
-  
-  createData('BIS06', 'Estructuras De Datos', '5:00/7:30pm','Por Asignar' ),
-  createData('BIS03', 'Programacion I','7:45/10:15PM','Por Asignar'),
-  createData('Eclair', 262, 16.0, 24, 6.0),
-  createData('Cupcake', 305, 3.7, 67, 4.3),
-  createData('Gingerbread', 356, 16.0, 49, 3.9),
-];
+  const fetchEnrolledCourses = async () => {
+    setLoading(true);
+    const userId = localStorage.getItem('userId');
 
-// Componente principal que renderiza la tabla
-const Courses = () => {
+    if (!userId) {
+      setError('Error: No se encontró el ID del usuario.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Obtener las matrículas del usuario
+      const { data: enrollments, error: enrollmentError } = await supabase
+        .from('Matrículas')
+        .select('curso_id')
+        .eq('estudiante_id', userId);
+
+      if (enrollmentError) {
+        throw enrollmentError;
+      }
+
+      // Obtener los detalles del curso para cada matrícula
+      const courseDetailsPromises = enrollments.map(async (enrollment) => {
+        const { data: course, error: courseError } = await supabase
+          .from('Cursos')
+          .select('Nombre')
+          .eq('Codigo', enrollment.curso_id)
+          .single();
+
+        if (courseError) {
+          throw courseError;
+        }
+
+        const { data: classDetails, error: classDetailsError } = await supabase
+          .from('Clases')
+          .select('horario, precio')
+          .eq('curso_id', enrollment.curso_id)
+          .single();
+
+        if (classDetailsError) {
+          throw classDetailsError;
+        }
+
+        const { data: carrera, error: carreraError } = await supabase
+          .from('Carrera')
+          .select('Nombre_Carrera')
+          .single(); // Ajusta según la relación entre cursos y carreras
+
+        if (carreraError) {
+          throw carreraError;
+        }
+
+        return {
+          curso_id: enrollment.curso_id,
+          nombre_curso: course.Nombre,
+          horario: classDetails.horario,
+          precio: classDetails.precio,
+          nombre_carrera: carrera.Nombre_Carrera,
+        };
+      });
+
+      const coursesWithDetails = await Promise.all(courseDetailsPromises);
+      setCourses(coursesWithDetails);
+    } catch (error) {
+      setError(error.message);
+      console.error('Error fetching enrolled courses:', error);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchEnrolledCourses();
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
+
   return (
-    // Contenedor de la tabla
     <TableContainer component={Paper}>
-      {/* La tabla en sí */}
-      <Table sx={{ minWidth:  700 }} aria-label="customized table">
-        {/* Cabecera de la tabla */}
+      <Table sx={{ minWidth: 700 }} aria-label="customized table">
         <TableHead>
           <TableRow>
-            <StyledTableCell>Codigo</StyledTableCell>
-            <StyledTableCell align="right">Nombre</StyledTableCell>
-            <StyledTableCell align="right">Creditos</StyledTableCell>
-            <StyledTableCell align="right">Cuatrimestre</StyledTableCell>
+            <StyledTableCell>Carrera</StyledTableCell>
+            <StyledTableCell align="right">Código del Curso</StyledTableCell>
+            <StyledTableCell align="right">Nombre del Curso</StyledTableCell>
+            <StyledTableCell align="right">Horario</StyledTableCell>
+            <StyledTableCell align="right">Costo</StyledTableCell>
           </TableRow>
         </TableHead>
-        {/* Cuerpo de la tabla */}
         <TableBody>
-          {rows.map((row) => (
-            // Renderizamos cada fila de datos
-            <StyledTableRow key={row.Curso}>
+          {courses.map((course, index) => (
+            <StyledTableRow key={index}>
               <StyledTableCell component="th" scope="row">
-                {row.Curso}
+                {course.nombre_carrera}
               </StyledTableCell>
-              <StyledTableCell align="right">{row.Horario}</StyledTableCell>
-              <StyledTableCell align="right">{row.Profesor}</StyledTableCell>
-              <StyledTableCell align="right">{row.Codigo}</StyledTableCell>
+              <StyledTableCell align="right">{course.curso_id}</StyledTableCell>
+              <StyledTableCell align="right">{course.nombre_curso}</StyledTableCell>
+              <StyledTableCell align="right">{course.horario}</StyledTableCell>
+              <StyledTableCell align="right">{course.precio}</StyledTableCell>
             </StyledTableRow>
           ))}
         </TableBody>
@@ -85,5 +141,4 @@ const Courses = () => {
   );
 };
 
-// Exportamos el componente para usarlo en otros lugares de la aplicación
-export default Courses;
+export default EnrolledCourses;
