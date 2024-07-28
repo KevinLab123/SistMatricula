@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AppBar, Toolbar, Typography, IconButton, Drawer, List, ListItem, ListItemText,
   Container, Grid, Button, Card, CardContent, CssBaseline
@@ -7,6 +7,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
 import { keyframes } from '@emotion/react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabase/client'; // Asegúrate de ajustar esta importación según tu estructura de proyecto
 
 // Tema personalizado con paleta de colores azul y blanco
 const theme = createTheme({
@@ -92,6 +93,13 @@ const Menu = () => {
   // Estado para controlar si el Drawer está abierto o cerrado
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // Estado para almacenar los datos del estudiante
+  const [studentData, setStudentData] = useState(null);
+
+  // Estado para controlar la carga y los errores
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   // Función para alternar el estado del Drawer (abrir o cerrar)
   const toggleDrawer = (open) => () => {
     setDrawerOpen(open);
@@ -99,6 +107,34 @@ const Menu = () => {
 
   // Leer perfil del usuario desde localStorage
   const userProfile = localStorage.getItem('userProfile');
+
+  // Función para obtener los datos del estudiante
+  const fetchStudentData = async () => {
+    const carnet = localStorage.getItem('userId');
+    if (!carnet) {
+      setError('No se encontró el carnet del usuario.');
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('Estudiantes')
+      .select('Carnet, Nombre, Apellido, Telefono')
+      .eq('Carnet', carnet)
+      .single();
+
+    if (error) {
+      setError('Perfil Administrativo');
+      setLoading(false);
+    } else {
+      setStudentData(data);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudentData();
+  }, []);
 
   // Manejadores de eventos para los ítems del Drawer
   const handleMatriculaClick = () => {
@@ -168,14 +204,32 @@ const Menu = () => {
             <StyledCard>
               <CardContent>
                 <Typography variant="h5" component="div">
-                  Información del Estudiante
+                  Información
                 </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  Nombre Completo: John Doe
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  Carnet: 123456
-                </Typography>
+                {loading ? (
+                  <Typography variant="body1" color="text.secondary">
+                    Cargando...
+                  </Typography>
+                ) : error ? (
+                  <Typography variant="body1" color="text.secondary">
+                    {error}
+                  </Typography>
+                ) : (
+                  <>
+                    <Typography variant="body1" color="text.secondary">
+                      Carnet: {studentData?.Carnet}
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      Nombre: {studentData?.Nombre}
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      Apellido: {studentData?.Apellido}
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      Teléfono: {studentData?.Telefono}
+                    </Typography>
+                  </>
+                )}
               </CardContent>
             </StyledCard>
           </Grid>
