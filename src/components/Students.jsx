@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../supabase/client"; // Asegúrate de que la ruta sea correcta
+import { supabase } from "../supabase/client";
 import { styled } from "@mui/material/styles";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -50,30 +50,58 @@ const Students = () => {
     Correo_Institucional: "",
     Correo: "",
     Telefono: "",
-    Contraseña: "", // Campo para la contraseña
+    Contraseña: "",
   });
   const [deleteStudentCode, setDeleteStudentCode] = useState("");
 
+  // Función para generar un carnet único
+  const generateUniqueCarnet = async () => {
+    let unique = false;
+    let carnet = "";
+    while (!unique) {
+      const randomDigits = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+      carnet = "2024731" + randomDigits;
+      const { data, error } = await supabase
+        .from("Estudiantes")
+        .select("Carnet")
+        .eq("Carnet", carnet);
+      
+      if (error) {
+        console.error("Error checking carnet uniqueness:", error);
+      } else if (data.length === 0) {
+        unique = true;
+      }
+    }
+    return carnet;
+  };
+
   const fetchStudents = async () => {
     setLoading(true);
-
     const { data, error } = await supabase
       .from("Estudiantes")
-      .select(
-        "Carnet, Nombre, Apellido, Correo_Institucional, Correo, Telefono"
-      );
-
+      .select("Carnet, Nombre, Apellido, Correo_Institucional, Correo, Telefono");
     if (error) {
       setError(error.message);
       console.error("Error fetching students:", error);
     } else {
-      console.log("Fetched data:", data); // Verifica los datos obtenidos
       setStudents(data);
     }
     setLoading(false);
   };
 
   const handleAddStudent = async () => {
+    // Generar carnet si no está presente
+    if (!newStudent.Carnet) {
+      const carnet = await generateUniqueCarnet();
+      setNewStudent({ ...newStudent, Carnet: carnet });
+    }
+
+    // Confirmar antes de agregar
+    setOpen(true);
+  };
+
+  const confirmAddStudent = async () => {
+    // Insertar datos en la base de datos
     const { data: studentData, error: studentError } = await supabase
       .from("Estudiantes")
       .insert([
@@ -95,7 +123,7 @@ const Students = () => {
           Usuario: `${newStudent.Nombre} ${newStudent.Apellido}`,
           Email: newStudent.Correo,
           Contraseña: newStudent.Contraseña,
-          rol: "Estudiante", // Ajusta el rol según sea necesario
+          rol: "Estudiante",
         },
       ]);
 
@@ -118,7 +146,6 @@ const Students = () => {
         },
       ]);
       setOpen(false);
-      // Limpiar campos después de agregar el estudiante
       setNewStudent({
         Carnet: "",
         Nombre: "",
@@ -181,9 +208,9 @@ const Students = () => {
             <StyledTableCell align="right">Nombre</StyledTableCell>
             <StyledTableCell align="right">Apellido</StyledTableCell>
             <StyledTableCell align="right">Telefono</StyledTableCell>
-            <StyledTableCell align="right">Correo</StyledTableCell>
+            <StyledTableCell align="right">Correo Institucional</StyledTableCell>
             <StyledTableCell align="right">
-              Correo Institucional
+              Correo
             </StyledTableCell>
           </TableRow>
         </TableHead>
@@ -219,14 +246,14 @@ const Students = () => {
         <Button
           variant="contained"
           color="success"
-          onClick={() => setOpen(true)}
+          onClick={handleAddStudent}
         >
           Agregar
         </Button>
       </Box>
 
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Agregar Estudiante</DialogTitle>
+        <DialogTitle>Confirmar Agregar Estudiante</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -234,9 +261,7 @@ const Students = () => {
             label="Carnet"
             fullWidth
             value={newStudent.Carnet}
-            onChange={(e) =>
-              setNewStudent({ ...newStudent, Carnet: e.target.value })
-            }
+            InputProps={{ readOnly: true }}
           />
           <TextField
             margin="dense"
@@ -267,7 +292,7 @@ const Students = () => {
           />
           <TextField
             margin="dense"
-            label="Correo"
+            label="Correo Institucional"
             fullWidth
             value={newStudent.Correo}
             onChange={(e) =>
@@ -276,7 +301,7 @@ const Students = () => {
           />
           <TextField
             margin="dense"
-            label="Correo Institucional"
+            label="Correo"
             fullWidth
             value={newStudent.Correo_Institucional}
             onChange={(e) =>
@@ -298,12 +323,8 @@ const Students = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)} color="primary">
-            Cancelar
-          </Button>
-          <Button onClick={handleAddStudent} color="primary">
-            Agregar
-          </Button>
+          <Button onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button onClick={confirmAddStudent}>Confirmar</Button>
         </DialogActions>
       </Dialog>
 
@@ -328,16 +349,14 @@ const Students = () => {
         <DialogTitle>Confirmar Eliminación</DialogTitle>
         <DialogContent>
           <p>
-            ¿Estás seguro de que deseas eliminar el estudiante con carnet{" "}
+            ¿Está seguro de que desea eliminar al estudiante con carnet{" "}
             {deleteStudentCode}?
           </p>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDelete(false)} color="primary">
-            Cancelar
-          </Button>
-          <Button onClick={handleConfirmDelete} color="primary">
-            Confirmar
+          <Button onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+          <Button onClick={handleConfirmDelete} color="error">
+            Eliminar
           </Button>
         </DialogActions>
       </Dialog>
