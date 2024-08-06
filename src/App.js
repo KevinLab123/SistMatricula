@@ -8,6 +8,7 @@ import Courses from './components/Courses';
 import StudyAdm from './components/StudyAdm';
 import Students from './components/Students';
 import RegistrationAdm from './components/RegistrationAdm';
+import Requirements from './components/Requirements';
 
 // Enrutamiento
 const ROUTES = {
@@ -18,7 +19,8 @@ const ROUTES = {
   REGISTRATIONADM: '/RegistrationAdm',
   COURSES: '/Courses',
   PLAN_ADMIN: '/StudyAdm',
-  STUDENTS: '/Students'
+  STUDENTS: '/Students',
+  REQUIREMENTS: '/Requirements'
 };
 
 function App() {
@@ -33,6 +35,7 @@ function App() {
         <Route path={ROUTES.PLAN_ADMIN} element=  {<StudyAdm />} />
         <Route path={ROUTES.STUDENTS} element=  {<Students />} />
         <Route path={ROUTES.REGISTRATIONADM} element=  {<RegistrationAdm />} />
+        <Route path={ROUTES.REQUIREMENTS} element=  {<Requirements />} />
       </Routes>
     </Router>
     // <div>
