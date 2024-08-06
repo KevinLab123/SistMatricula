@@ -8,21 +8,19 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
-import CheckIcon from '@mui/icons-material/Check';
+import Checkbox from '@mui/material/Checkbox';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import Grid from '@mui/material/Grid';
-import TextField from '@mui/material/TextField';
-import ButtonGroup from '@mui/material/ButtonGroup';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import Checkbox from '@mui/material/Checkbox';
+import TextField from '@mui/material/TextField';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import Alert from '@mui/material/Alert';
 import { supabase } from '../supabase/client';
 import { useEffect, useState } from 'react';
-import Alert from '@mui/material/Alert';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -232,17 +230,16 @@ const Registration = () => {
           .from('Requisitos')
           .select('Estado')
           .eq('Carnet_Estudiante', localStorage.getItem('userId'))
-          .eq('ID_Curso', course.curso_id) // Actualizado
+          .eq('ID_Curso', course.curso_id)
           .single();
 
         if (reqError) {
           console.error('Error checking course requirements:', reqError);
-          // Añadir error a la lista de errores sin detener el proceso
           requirementErrors.push(`Error al verificar requisitos para el curso ${course.nombre_curso} (${course.curso_id})`);
           continue; // Continuar con el siguiente curso
         }
 
-        if (reqData && reqData.Estado !== 'Cumple') {
+        if (reqData && reqData.Estado !== true) { // Comparar como booleano
           allRequirementsMet = false;
           requirementErrors.push(`Incumplimiento de requisitos: Curso ${course.nombre_curso} (${course.curso_id})`);
           break;

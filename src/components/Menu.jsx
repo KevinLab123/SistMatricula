@@ -93,6 +93,7 @@ const Menu = () => {
   const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userEmail, setUserEmail] = useState('');
 
   const toggleDrawer = (open) => () => {
     setDrawerOpen(open);
@@ -123,8 +124,26 @@ const Menu = () => {
     }
   };
 
+  const fetchUserEmail = async () => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    const { data, error } = await supabase
+      .from('Perfiles')
+      .select('Email')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user email:', error);
+    } else {
+      setUserEmail(data.Email);
+    }
+  };
+
   useEffect(() => {
     fetchStudentData();
+    fetchUserEmail();
   }, []);
 
   const handleMatriculaClick = () => {
@@ -177,7 +196,7 @@ const Menu = () => {
               { text: 'Cursos', onClick: handleCursosClick },
               { text: 'Plan de Estudios', onClick: handlePlanClick },
               userProfile === 'admin@ulatina.net' && { text: 'Estudiantes', onClick: handleEstudiantesClick },
-              userProfile === 'academico1@ulatina.net' && { text: 'Requisitos', onClick: handleRequirementsClick },
+              userEmail === 'mentor@ulatina.net' && { text: 'Requisitos', onClick: handleRequirementsClick },
             ].map((item, index) => (
               item && (
                 <ListItem button key={index} onClick={item.onClick}>
@@ -245,7 +264,7 @@ const Menu = () => {
               </StyledButton>
             </Grid>
           )}
-          {userProfile === 'academico1@ulatina.net' && (
+          {userEmail === 'mentor@ulatina.net' && (
             <Grid item xs={12} sm={6} md={4}>
               <StyledButton variant="contained" color="primary" onClick={handleRequirementsClick} fullWidth>
                 Requisitos
