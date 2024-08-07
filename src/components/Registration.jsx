@@ -61,6 +61,8 @@ const Registration = () => {
   });
   const [requirementsError, setRequirementsError] = useState(null);
   const [requirementsMet, setRequirementsMet] = useState(true);
+  const [scheduleConflict, setScheduleConflict] = useState(false);
+  const [selectionWarning, setSelectionWarning] = useState('');
 
   const fetchCourses = async () => {
     setLoading(true);
@@ -139,13 +141,20 @@ const Registration = () => {
 
   const handleCheckboxChange = (course) => {
     const isSelected = selectedCourses.some(selected => selected.curso_id === course.curso_id);
-    let newSelectedCourses;
+
     if (isSelected) {
-      newSelectedCourses = selectedCourses.filter(selected => selected.curso_id !== course.curso_id);
+      // Remove the course from the selection
+      setSelectedCourses(selectedCourses.filter(selected => selected.curso_id !== course.curso_id));
+      setSelectionWarning('');
     } else {
-      newSelectedCourses = [...selectedCourses, course];
+      // Only add the course if fewer than 5 courses are selected
+      if (selectedCourses.length < 5) {
+        setSelectedCourses([...selectedCourses, course]);
+        setSelectionWarning('');
+      } else {
+        setSelectionWarning('Puedes seleccionar un máximo de 5 cursos.');
+      }
     }
-    setSelectedCourses(newSelectedCourses);
   };
 
   const handleRegisterClick = () => {
@@ -216,9 +225,19 @@ const Registration = () => {
     return transferDetails.cedula && transferDetails.iban && transferDetails.monto;
   };
 
+  const checkScheduleConflicts = () => {
+    const horarios = selectedCourses.map(course => course.horario);
+    const hasConflict = horarios.some((item, index) => horarios.indexOf(item) !== index);
+    setScheduleConflict(hasConflict);
+  };
+
   useEffect(() => {
     fetchCourses();
   }, []);
+
+  useEffect(() => {
+    checkScheduleConflicts();
+  }, [selectedCourses]);
 
   useEffect(() => {
     const checkRequirements = async () => {
@@ -264,46 +283,54 @@ const Registration = () => {
   }, [selectedCourses]);
 
   return (
-    <TableContainer component={Paper}>
-      {loading ? <Typography>Loading...</Typography> : error ? <Alert severity="error">{error}</Alert> : (
-        <Table>
-          <TableHead>
-            <TableRow>
-              <StyledTableCell>Grupo</StyledTableCell>
-              <StyledTableCell>Curso</StyledTableCell>
-              <StyledTableCell align="right">ID Curso</StyledTableCell>
-              <StyledTableCell align="right">Aula</StyledTableCell>
-              <StyledTableCell align="right">Horario</StyledTableCell>
-              <StyledTableCell align="right">Precio</StyledTableCell>
-              <StyledTableCell align="right">Seleccionar</StyledTableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {courses.map((course) => (
-              <StyledTableRow key={course.curso_id}>
-                <StyledTableCell>{course.grupo_id}</StyledTableCell>
-                <StyledTableCell>{course.nombre_curso}</StyledTableCell>
-                <StyledTableCell align="right">{course.curso_id}</StyledTableCell>
-                <StyledTableCell align="right">{course.aula}</StyledTableCell>
-                <StyledTableCell align="right">{course.horario}</StyledTableCell>
-                <StyledTableCell align="right">${course.precio}</StyledTableCell>
-                <StyledTableCell align="right">
-                  <Checkbox
-                    checked={selectedCourses.some((selected) => selected.curso_id === course.curso_id)}
-                    onChange={() => handleCheckboxChange(course)}
-                  />
-                </StyledTableCell>
-              </StyledTableRow>
-            ))}
-          </TableBody>
-        </Table>
+    <Box>
+      {/* Display the selection warning message */}
+      {selectionWarning && (
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Alert severity="warning">{selectionWarning}</Alert>
+        </Box>
       )}
-      <Box sx={{ p: 2 }}>
-        <Typography variant="h6">Total a pagar: ${selectedCourses.reduce((total, course) => total + course.precio, 0)}</Typography>
-        <Button variant="contained" color="primary" onClick={handleRegisterClick}>
-          Confirmar Matrícula
-        </Button>
-      </Box>
+      <TableContainer component={Paper}>
+        {loading ? <Typography>Loading...</Typography> : error ? <Alert severity="error">{error}</Alert> : (
+          <Table>
+            <TableHead>
+              <TableRow>
+                <StyledTableCell>Grupo</StyledTableCell>
+                <StyledTableCell>Curso</StyledTableCell>
+                <StyledTableCell align="right">ID Curso</StyledTableCell>
+                <StyledTableCell align="right">Aula</StyledTableCell>
+                <StyledTableCell align="right">Horario</StyledTableCell>
+                <StyledTableCell align="right">Precio</StyledTableCell>
+                <StyledTableCell align="right">Seleccionar</StyledTableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {courses.map((course) => (
+                <StyledTableRow key={course.curso_id}>
+                  <StyledTableCell>{course.grupo_id}</StyledTableCell>
+                  <StyledTableCell>{course.nombre_curso}</StyledTableCell>
+                  <StyledTableCell align="right">{course.curso_id}</StyledTableCell>
+                  <StyledTableCell align="right">{course.aula}</StyledTableCell>
+                  <StyledTableCell align="right">{course.horario}</StyledTableCell>
+                  <StyledTableCell align="right">${course.precio}</StyledTableCell>
+                  <StyledTableCell align="right">
+                    <Checkbox
+                      checked={selectedCourses.some((selected) => selected.curso_id === course.curso_id)}
+                      onChange={() => handleCheckboxChange(course)}
+                    />
+                  </StyledTableCell>
+                </StyledTableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+        <Box sx={{ p: 2 }}>
+          <Typography variant="h6">Total a pagar: ${selectedCourses.reduce((total, course) => total + course.precio, 0)}</Typography>
+          <Button variant="contained" color="primary" onClick={handleRegisterClick}>
+            Confirmar Matrícula
+          </Button>
+        </Box>
+      </TableContainer>
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Confirmar Matrícula</DialogTitle>
         <DialogContent>
@@ -313,18 +340,21 @@ const Registration = () => {
           {requirementsError && (
             <Box sx={{ mb: 2 }}>{requirementsError}</Box>
           )}
+          {scheduleConflict && (
+            <Alert severity="warning">Existen conflictos de horarios en los cursos seleccionados.</Alert>
+          )}
           <Box>
             <Typography variant="h6">Método de Pago</Typography>
             <ButtonGroup variant="contained" color="primary">
               <Button
                 onClick={() => handlePaymentMethodChange('card')}
-                disabled={!requirementsMet}
+                disabled={!requirementsMet || scheduleConflict}
               >
                 Tarjeta
               </Button>
               <Button
                 onClick={() => handlePaymentMethodChange('transfer')}
-                disabled={!requirementsMet}
+                disabled={!requirementsMet || scheduleConflict}
               >
                 Transferencia
               </Button>
@@ -395,13 +425,13 @@ const Registration = () => {
           <Button onClick={() => setOpen(false)}>Cancelar</Button>
           <Button
             onClick={handleRegister}
-            disabled={!requirementsMet || (paymentMethod === 'card' ? !isCardDetailsValid() : !isTransferDetailsValid())}
+            disabled={!requirementsMet || !paymentMethod || (paymentMethod === 'card' ? !isCardDetailsValid() : !isTransferDetailsValid()) || scheduleConflict}
           >
             Confirmar
           </Button>
         </DialogActions>
       </Dialog>
-    </TableContainer>
+    </Box>
   );
 };
 
