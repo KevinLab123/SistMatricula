@@ -88,7 +88,7 @@ function Sign() {
           </Grid>
           <Grid item xs={12} md={6} style={styles.formCol}>
             <Typography variant="h4" gutterBottom>
-              Ingresa tus credenciales
+              CloudWave University
             </Typography>
             <TextField
               label="Correo Institucional"
