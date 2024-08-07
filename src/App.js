@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './components/AuthContext';
 import Sign from './components/Sign';
 import Menu from './components/Menu';
 import StudyPlan from './components/StudyPlan';
@@ -9,6 +10,7 @@ import StudyAdm from './components/StudyAdm';
 import Students from './components/Students';
 import RegistrationAdm from './components/RegistrationAdm';
 import Requirements from './components/Requirements';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Enrutamiento
 const ROUTES = {
@@ -25,22 +27,21 @@ const ROUTES = {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path={ROUTES.SIGN} element={<Sign />} />
-        <Route path={ROUTES.MENU} element={<Menu />} />
-        <Route path={ROUTES.PLAN} element={<StudyPlan />} />
-        <Route path={ROUTES.REGISTRATION} element={<Registration />} />
-        <Route path={ROUTES.COURSES} element=  {<Courses />} />
-        <Route path={ROUTES.PLAN_ADMIN} element=  {<StudyAdm />} />
-        <Route path={ROUTES.STUDENTS} element=  {<Students />} />
-        <Route path={ROUTES.REGISTRATIONADM} element=  {<RegistrationAdm />} />
-        <Route path={ROUTES.REQUIREMENTS} element=  {<Requirements />} />
-      </Routes>
-    </Router>
-    // <div>
-    //   <StudyPlan></StudyPlan>
-    // </div>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path={ROUTES.SIGN} element={<Sign />} />
+          <Route path={ROUTES.MENU} element={<ProtectedRoute element={<Menu />} />} />
+          <Route path={ROUTES.PLAN} element={<ProtectedRoute element={<StudyPlan />} />} />
+          <Route path={ROUTES.REGISTRATION} element={<ProtectedRoute element={<Registration />} />} />
+          <Route path={ROUTES.COURSES} element={<ProtectedRoute element={<Courses />} />} />
+          <Route path={ROUTES.PLAN_ADMIN} element={<ProtectedRoute element={<StudyAdm />} />} />
+          <Route path={ROUTES.STUDENTS} element={<ProtectedRoute element={<Students />} />} />
+          <Route path={ROUTES.REGISTRATIONADM} element={<ProtectedRoute element={<RegistrationAdm />} />} />
+          <Route path={ROUTES.REQUIREMENTS} element={<ProtectedRoute element={<Requirements />} />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
