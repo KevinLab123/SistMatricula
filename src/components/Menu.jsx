@@ -174,22 +174,29 @@ const Menu = () => {
     navigate(ROUTES.REQUIREMENTS);
   };
 
+  const handleLogout = () => {
+    // Clear local storage or any other logout actions
+    localStorage.removeItem('userProfile');
+    localStorage.removeItem('userId');
+    // Redirect to Sign component
+    navigate(ROUTES.SIGN);
+  };
+
   return (
-    
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <StyledContainer>
         <Grid item xs={12} sm={6} md={4}>
-        <StyledAppBar position="static">
-          <Toolbar>
-            <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleDrawer(true)}>
-              <MenuIcon />
-            </IconButton>
-            <StyledTypography variant="h6">
-              Sistema de Matrícula
-            </StyledTypography>
-          </Toolbar>
-        </StyledAppBar>
+          <StyledAppBar position="static">
+            <Toolbar>
+              <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleDrawer(true)}>
+                <MenuIcon />
+              </IconButton>
+              <StyledTypography variant="h6">
+                Sistema de Matrícula
+              </StyledTypography>
+            </Toolbar>
+          </StyledAppBar>
         </Grid>
 
         <StyledDrawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
@@ -200,6 +207,7 @@ const Menu = () => {
               { text: 'Plan de Estudios', onClick: handlePlanClick },
               userProfile === 'admin@ulatina.net' && { text: 'Estudiantes', onClick: handleEstudiantesClick },
               userEmail === 'mentor@ulatina.net' && { text: 'Requisitos', onClick: handleRequirementsClick },
+              { text: 'Cerrar Sesión', onClick: handleLogout }, // New option added
             ].map((item, index) => (
               item && (
                 <ListItem button key={index} onClick={item.onClick}>

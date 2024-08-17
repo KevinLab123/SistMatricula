@@ -13,6 +13,7 @@ import Checkbox from '@mui/material/Checkbox';
 import { green, red } from '@mui/material/colors';
 import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert'; // Asegúrate de que has importado Alert
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -36,7 +37,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 const Requirements = () => {
   const [requirements, setRequirements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [notFoundMessage, setNotFoundMessage] = useState(null); // Estado para el mensaje de no encontrado
   const [newRequirement, setNewRequirement] = useState({
     ID_Curso: '',
     Carnet_Estudiante: '',
@@ -51,7 +52,6 @@ const Requirements = () => {
       .select('ID_Curso, Carnet_Estudiante, Estado');
 
     if (error) {
-      setError(error.message);
       console.error('Error fetching requirements:', error);
     } else {
       setRequirements(data);
@@ -65,7 +65,6 @@ const Requirements = () => {
       .insert([newRequirement]);
 
     if (error) {
-      setError(error.message);
       console.error('Error adding requirement:', error);
     } else {
       setNewRequirement({
@@ -78,14 +77,17 @@ const Requirements = () => {
   };
 
   const handleDeleteRequirement = async (id) => {
+    setNotFoundMessage(null); // Limpiar el mensaje de no encontrado
+
     const { data, error } = await supabase
       .from('Requisitos')
       .delete()
       .eq('ID_Curso', id);
 
     if (error) {
-      setError(error.message);
       console.error('Error deleting requirement:', error);
+    } else if (data && data.length === 0) {
+      setNotFoundMessage('Código no encontrado');
     } else {
       fetchRequirements();
     }
@@ -98,7 +100,6 @@ const Requirements = () => {
       .eq('ID_Curso', id);
 
     if (error) {
-      setError(error.message);
       console.error('Error updating requirement status:', error);
     } else {
       fetchRequirements();
@@ -110,10 +111,14 @@ const Requirements = () => {
   }, []);
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error}</p>;
-
+  
   return (
     <Box sx={{ p: 2 }}>
+      {notFoundMessage && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {notFoundMessage}
+        </Alert>
+      )}
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 700 }} aria-label="customized table">
           <TableHead>

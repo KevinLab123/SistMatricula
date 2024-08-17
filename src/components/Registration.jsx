@@ -298,7 +298,7 @@ const Registration = () => {
   return (
     <Box p={2}>
       <Typography variant="h4" gutterBottom>
-        Registro de Cursos
+        Cursos Disponibles
       </Typography>
       {error && <Alert severity="error">{error}</Alert>}
       {loading ? (

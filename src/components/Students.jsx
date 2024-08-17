@@ -77,16 +77,20 @@ const Students = () => {
 
   const fetchStudents = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("Estudiantes")
-      .select("Carnet, Nombre, Apellido, Correo_Institucional, Correo, Telefono");
-    if (error) {
-      setError(error.message);
-      console.error("Error fetching students:", error);
-    } else {
+    try {
+      const { data, error } = await supabase
+        .from("Estudiantes")
+        .select("Carnet, Nombre, Apellido, Correo_Institucional, Correo, Telefono");
+
+      if (error) throw error;
+
       setStudents(data);
+    } catch (err) {
+      setError(err.message);
+      console.error("Error fetching students:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleAddStudent = async () => {
@@ -101,39 +105,37 @@ const Students = () => {
   };
 
   const confirmAddStudent = async () => {
-    // Insertar datos en la base de datos
-    const { data: studentData, error: studentError } = await supabase
-      .from("Estudiantes")
-      .insert([
-        {
-          Carnet: newStudent.Carnet,
-          Nombre: newStudent.Nombre,
-          Apellido: newStudent.Apellido,
-          Correo_Institucional: newStudent.Correo_Institucional,
-          Correo: newStudent.Correo,
-          Telefono: newStudent.Telefono,
-        },
-      ]);
+    try {
+      // Insertar datos en la base de datos
+      const { error: studentError } = await supabase
+        .from("Estudiantes")
+        .insert([
+          {
+            Carnet: newStudent.Carnet,
+            Nombre: newStudent.Nombre,
+            Apellido: newStudent.Apellido,
+            Correo_Institucional: newStudent.Correo_Institucional,
+            Correo: newStudent.Correo,
+            Telefono: newStudent.Telefono,
+          },
+        ]);
 
-    const { data: profileData, error: profileError } = await supabase
-      .from("Perfiles")
-      .insert([
-        {
-          id: newStudent.Carnet,
-          Usuario: `${newStudent.Nombre} ${newStudent.Apellido}`,
-          Email: newStudent.Correo,
-          Contraseña: newStudent.Contraseña,
-          rol: "Estudiante",
-        },
-      ]);
+      const { error: profileError } = await supabase
+        .from("Perfiles")
+        .insert([
+          {
+            id: newStudent.Carnet,
+            Usuario: `${newStudent.Nombre} ${newStudent.Apellido}`,
+            Email: newStudent.Correo,
+            Contraseña: newStudent.Contraseña,
+            rol: "Estudiante",
+          },
+        ]);
 
-    if (studentError || profileError) {
-      setError(studentError ? studentError.message : profileError.message);
-      console.error(
-        "Error adding student or profile:",
-        studentError || profileError
-      );
-    } else {
+      if (studentError || profileError) {
+        throw new Error(studentError ? studentError.message : profileError.message);
+      }
+
       setStudents([
         ...students,
         {
@@ -155,6 +157,9 @@ const Students = () => {
         Telefono: "",
         Contraseña: "",
       });
+    } catch (err) {
+      setError(err.message);
+      console.error("Error adding student or profile:", err);
     }
   };
 
@@ -163,30 +168,40 @@ const Students = () => {
   };
 
   const handleDeleteStudent = async () => {
-    const { data: studentData, error: studentError } = await supabase
-      .from("Estudiantes")
-      .delete()
-      .eq("Carnet", deleteStudentCode);
-
-    const { data: profileData, error: profileError } = await supabase
-      .from("Perfiles")
-      .delete()
-      .eq("id", deleteStudentCode);
-
-    if (studentError || profileError) {
-      setError(studentError ? studentError.message : profileError.message);
-      console.error(
-        "Error deleting student or profile:",
-        studentError || profileError
-      );
-    } else {
+    try {
+      // Intentar eliminar al estudiante y su perfil
+      const { data: studentData, error: studentError } = await supabase
+        .from("Estudiantes")
+        .delete()
+        .eq("Carnet", deleteStudentCode);
+  
+      const { data: profileData, error: profileError } = await supabase
+        .from("Perfiles")
+        .delete()
+        .eq("id", deleteStudentCode);
+  
+      if (studentError || profileError) {
+        throw new Error(studentError ? studentError.message : profileError.message);
+      }
+  
+      if (studentData.length === 0 && profileData.length === 0) {
+        // No se encontraron registros para eliminar
+        return;
+      }
+  
       setStudents(
         students.filter((student) => student.Carnet !== deleteStudentCode)
       );
       setDeleteStudentCode("");
+    } catch (err) {
+      setError(null); // No mostrar error si no se encontró el estudiante
+      console.error("Error deleting student or profile:", err);
+    } finally {
+      // Cerrar el diálogo al finalizar la eliminación
       setConfirmDelete(false);
     }
   };
+  
 
   const handleConfirmDelete = () => {
     handleDeleteStudent();
@@ -197,7 +212,6 @@ const Students = () => {
   }, []);
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error}</p>;
 
   return (
     <TableContainer component={Paper}>
@@ -209,9 +223,7 @@ const Students = () => {
             <StyledTableCell align="right">Apellido</StyledTableCell>
             <StyledTableCell align="right">Telefono</StyledTableCell>
             <StyledTableCell align="right">Correo Institucional</StyledTableCell>
-            <StyledTableCell align="right">
-              Correo
-            </StyledTableCell>
+            <StyledTableCell align="right">Correo</StyledTableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -221,16 +233,10 @@ const Students = () => {
                 {student.Carnet}
               </StyledTableCell>
               <StyledTableCell align="right">{student.Nombre}</StyledTableCell>
-              <StyledTableCell align="right">
-                {student.Apellido}
-              </StyledTableCell>
-              <StyledTableCell align="right">
-                {student.Telefono}
-              </StyledTableCell>
+              <StyledTableCell align="right">{student.Apellido}</StyledTableCell>
+              <StyledTableCell align="right">{student.Telefono}</StyledTableCell>
+              <StyledTableCell align="right">{student.Correo_Institucional}</StyledTableCell>
               <StyledTableCell align="right">{student.Correo}</StyledTableCell>
-              <StyledTableCell align="right">
-                {student.Correo_Institucional}
-              </StyledTableCell>
             </StyledTableRow>
           ))}
         </TableBody>
