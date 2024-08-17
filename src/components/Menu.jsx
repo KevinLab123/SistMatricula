@@ -175,9 +175,11 @@ const Menu = () => {
   };
 
   return (
+    
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <StyledContainer>
+        <Grid item xs={12} sm={6} md={4}>
         <StyledAppBar position="static">
           <Toolbar>
             <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleDrawer(true)}>
@@ -188,6 +190,7 @@ const Menu = () => {
             </StyledTypography>
           </Toolbar>
         </StyledAppBar>
+        </Grid>
 
         <StyledDrawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
           <List>

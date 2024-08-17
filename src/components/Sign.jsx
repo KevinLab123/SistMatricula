@@ -3,14 +3,12 @@ import { Container, Box, Grid, TextField, Button, Typography } from '@mui/materi
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase/client'; // Asegúrate de que la ruta sea correcta
 
-// Definición local de rutas
 const ROUTES = {
   SIGN: '/',
   MENU: '/menu',
 };
 
 function Sign() {
-  // Definición de estilos
   const styles = {
     container: {
       height: '100vh',
@@ -19,24 +17,30 @@ function Sign() {
       justifyContent: 'center',
       background:
         'linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1))',
+      padding: '1rem', // Añadido para mejorar el espaciado en pantallas pequeñas
     },
     card: {
       background: '#fff',
       borderRadius: '1rem',
       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      width: '100%',
       maxWidth: '900px',
       overflow: 'hidden',
-      display: 'flex',
     },
     image: {
       width: '100%',
-      height: 'auto',
+      height: '100%',
+      objectFit: 'cover', // Ajusta la imagen sin distorsión
     },
     formCol: {
-      padding: '2rem',
+      padding: { xs: '1.5rem', sm: '2rem' }, // Padding responsivo
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
+    },
+    heading: {
+      fontSize: { xs: '1.8rem', sm: '2rem', md: '2.5rem' }, // Tamaño de fuente responsivo
+      textAlign: 'center',
     },
   };
 
@@ -47,7 +51,6 @@ function Sign() {
 
   const navigate = useNavigate();
 
-  // Función de inicio de sesión
   const handleLogin = async () => {
     setLoading(true);
     setError(null);
@@ -57,12 +60,11 @@ function Sign() {
       .select('*')
       .eq('Email', email)
       .eq('Contraseña', password)
-      .single(); // Usar single() para obtener un solo registro
+      .single();
 
     if (error) {
       setError('Credenciales incorrectas.');
     } else if (data) {
-      // Si el usuario existe, guarda el email y el id en local storage y redirige al menú
       const userProfile = data.Email;
       const userId = data.id;
       localStorage.setItem('userProfile', userProfile);
@@ -76,8 +78,8 @@ function Sign() {
   };
 
   return (
-    <Container style={styles.container}>
-      <Box style={styles.card}>
+    <Container sx={styles.container}>
+      <Box sx={styles.card}>
         <Grid container>
           <Grid item xs={12} md={6}>
             <img
@@ -86,8 +88,8 @@ function Sign() {
               style={styles.image}
             />
           </Grid>
-          <Grid item xs={12} md={6} style={styles.formCol}>
-            <Typography variant="h4" gutterBottom>
+          <Grid item xs={12} md={6} sx={styles.formCol}>
+            <Typography variant="h4" sx={styles.heading} gutterBottom>
               CloudWave University
             </Typography>
             <TextField
@@ -115,6 +117,7 @@ function Sign() {
               size="large"
               onClick={handleLogin}
               disabled={loading}
+              sx={{ mt: 2 }} // Espaciado superior
             >
               {loading ? 'Ingresando...' : 'Ingresar'}
             </Button>

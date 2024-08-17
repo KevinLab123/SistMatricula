@@ -43,6 +43,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 
 const Registration = () => {
   const [courses, setCourses] = useState([]);
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
@@ -91,7 +92,7 @@ const Registration = () => {
     const studentId = studentData ? studentData.id : '';
 
     // Fetch enrolled courses
-    const { data: enrolledCourses, error: enrollmentError } = await supabase
+    const { data: enrolledCoursesData, error: enrollmentError } = await supabase
       .from('Matrículas')
       .select('curso_id')
       .eq('estudiante_id', userId);
@@ -103,7 +104,7 @@ const Registration = () => {
       return;
     }
 
-    const enrolledCourseIds = enrolledCourses.map((matricula) => matricula.curso_id);
+    const enrolledCourseIds = enrolledCoursesData.map((matricula) => matricula.curso_id);
 
     // Fetch available courses
     const { data, error } = await supabase
@@ -134,6 +135,10 @@ const Registration = () => {
         (course) => !enrolledCourseIds.includes(course.curso_id)
       );
       setCourses(availableCourses);
+
+      // Fetch enrolled courses details
+      const enrolledCoursesDataWithDetails = coursesWithNames.filter(course => enrolledCourseIds.includes(course.curso_id));
+      setEnrolledCourses(enrolledCoursesDataWithDetails);
     }
 
     setLoading(false);
@@ -163,26 +168,26 @@ const Registration = () => {
 
   const handleRegister = async () => {
     const userId = localStorage.getItem('userId');
-  
+
     if (!userId) {
       alert('Error: No se encontró el ID del usuario.');
       return;
     }
-  
+
     if (selectedCourses.length === 0) {
       alert('Por favor, selecciona al menos un curso para matricular.');
       return;
     }
-  
+
     const matriculas = selectedCourses.map(course => ({
       estudiante_id: userId,
       curso_id: course.curso_id,
     }));
-  
+
     const { data, error } = await supabase
       .from('Matrículas')
       .insert(matriculas);
-  
+
     if (error) {
       console.error('Error creating matrícula:', error);
       alert(`Error al crear la matrícula: ${error.message}`);
@@ -226,18 +231,29 @@ const Registration = () => {
   };
 
   const checkScheduleConflicts = () => {
-    const horarios = selectedCourses.map(course => course.horario);
-    const hasConflict = horarios.some((item, index) => horarios.indexOf(item) !== index);
-    setScheduleConflict(hasConflict);
+    const selectedSchedules = selectedCourses.map(course => course.horario);
+    const enrolledSchedules = enrolledCourses.map(course => course.horario);
+  
+    // Verificar conflictos entre los cursos seleccionados
+    const hasInternalConflict = selectedSchedules.some((item, index) => selectedSchedules.indexOf(item) !== index);
+  
+    // Verificar conflictos entre los cursos seleccionados y los cursos ya matriculados
+    const hasExternalConflict = selectedSchedules.some(schedule => 
+      enrolledSchedules.includes(schedule)
+    );
+  
+    setScheduleConflict(hasInternalConflict || hasExternalConflict);
   };
-
+  
   useEffect(() => {
     fetchCourses();
   }, []);
-
+  
   useEffect(() => {
     checkScheduleConflicts();
-  }, [selectedCourses]);
+  }, [selectedCourses, enrolledCourses]);
+  
+  
 
   useEffect(() => {
     const checkRequirements = async () => {
@@ -268,7 +284,7 @@ const Registration = () => {
       if (allRequirementsMet) {
         setRequirementsError(null);
       } else {
-        setRequirementsError(<Alert severity="warning">{requirementErrors.join(', ')}</Alert>);
+        setRequirementsError(<Alert severity="error">{requirementErrors.join(' | ')}</Alert>);
       }
 
       setRequirementsMet(allRequirementsMet);
@@ -276,46 +292,41 @@ const Registration = () => {
 
     if (selectedCourses.length > 0) {
       checkRequirements();
-    } else {
-      setRequirementsError(null);
-      setRequirementsMet(true);
     }
   }, [selectedCourses]);
 
   return (
-    <Box>
-      {/* Display the selection warning message */}
-      {selectionWarning && (
-        <Box sx={{ p: 2, textAlign: 'center' }}>
-          <Alert severity="warning">{selectionWarning}</Alert>
-        </Box>
-      )}
-      <TableContainer component={Paper}>
-        {loading ? <Typography>Loading...</Typography> : error ? <Alert severity="error">{error}</Alert> : (
+    <Box p={2}>
+      <Typography variant="h4" gutterBottom>
+        Registro de Cursos
+      </Typography>
+      {error && <Alert severity="error">{error}</Alert>}
+      {loading ? (
+        <Typography variant="body1">Cargando cursos...</Typography>
+      ) : (
+        <TableContainer component={Paper} sx={{ marginBottom: 2 }}>
           <Table>
             <TableHead>
               <TableRow>
-                <StyledTableCell>Grupo</StyledTableCell>
                 <StyledTableCell>Curso</StyledTableCell>
-                <StyledTableCell align="right">ID Curso</StyledTableCell>
-                <StyledTableCell align="right">Aula</StyledTableCell>
-                <StyledTableCell align="right">Horario</StyledTableCell>
-                <StyledTableCell align="right">Precio</StyledTableCell>
-                <StyledTableCell align="right">Seleccionar</StyledTableCell>
+                <StyledTableCell>Grupo</StyledTableCell>
+                <StyledTableCell>Aula</StyledTableCell>
+                <StyledTableCell>Horario</StyledTableCell>
+                <StyledTableCell>Precio</StyledTableCell>
+                <StyledTableCell>Seleccionar</StyledTableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {courses.map((course) => (
                 <StyledTableRow key={course.curso_id}>
-                  <StyledTableCell>{course.grupo_id}</StyledTableCell>
                   <StyledTableCell>{course.nombre_curso}</StyledTableCell>
-                  <StyledTableCell align="right">{course.curso_id}</StyledTableCell>
-                  <StyledTableCell align="right">{course.aula}</StyledTableCell>
-                  <StyledTableCell align="right">{course.horario}</StyledTableCell>
-                  <StyledTableCell align="right">${course.precio}</StyledTableCell>
-                  <StyledTableCell align="right">
+                  <StyledTableCell>{course.grupo_id}</StyledTableCell>
+                  <StyledTableCell>{course.aula}</StyledTableCell>
+                  <StyledTableCell>{course.horario}</StyledTableCell>
+                  <StyledTableCell>{course.precio}</StyledTableCell>
+                  <StyledTableCell>
                     <Checkbox
-                      checked={selectedCourses.some((selected) => selected.curso_id === course.curso_id)}
+                      checked={selectedCourses.some(selected => selected.curso_id === course.curso_id)}
                       onChange={() => handleCheckboxChange(course)}
                     />
                   </StyledTableCell>
@@ -323,114 +334,130 @@ const Registration = () => {
               ))}
             </TableBody>
           </Table>
-        )}
-        <Box sx={{ p: 2 }}>
-          <Typography variant="h6">Total a pagar: ${selectedCourses.reduce((total, course) => total + course.precio, 0)}</Typography>
-          <Button variant="contained" color="primary" onClick={handleRegisterClick}>
-            Confirmar Matrícula
-          </Button>
-        </Box>
-      </TableContainer>
+        </TableContainer>
+      )}
+      {requirementsError && <Box mb={2}>{requirementsError}</Box>}
+      {scheduleConflict && (
+        <Alert severity="warning">Conflicto de horarios detectado.</Alert>
+      )}
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleRegisterClick}
+        disabled={!requirementsMet || scheduleConflict}
+      >
+        Matricular Cursos
+      </Button>
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Confirmar Matrícula</DialogTitle>
+        <DialogTitle>Seleccionar Método de Pago</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            ¿Deseas confirmar la matrícula de los cursos seleccionados?
+            Selecciona el método de pago y proporciona los detalles correspondientes.
           </DialogContentText>
-          {requirementsError && (
-            <Box sx={{ mb: 2 }}>{requirementsError}</Box>
-          )}
-          {scheduleConflict && (
-            <Alert severity="warning">Existen conflictos de horarios en los cursos seleccionados.</Alert>
-          )}
-          <Box>
-            <Typography variant="h6">Método de Pago</Typography>
-            <ButtonGroup variant="contained" color="primary">
+          <ButtonGroup variant="contained" color="primary">
+            <Button onClick={() => handlePaymentMethodChange('card')}>Tarjeta de Crédito</Button>
+            <Button onClick={() => handlePaymentMethodChange('transfer')}>Transferencia Bancaria</Button>
+          </ButtonGroup>
+          {paymentMethod === 'card' && (
+            <Box mt={2}>
+              <TextField
+                label="Nombre del Encargado"
+                name="encargado"
+                fullWidth
+                onChange={handleCardDetailsChange}
+              />
+              <TextField
+                label="Número de Tarjeta"
+                name="numeroTarjeta"
+                fullWidth
+                onChange={handleCardDetailsChange}
+              />
+              <TextField
+                label="Vencimiento (MM/AA)"
+                name="vencimiento"
+                fullWidth
+                onChange={handleCardDetailsChange}
+              />
+              <TextField
+                label="CVV"
+                name="cvv"
+                fullWidth
+                onChange={handleCardDetailsChange}
+              />
               <Button
-                onClick={() => handlePaymentMethodChange('card')}
-                disabled={!requirementsMet || scheduleConflict}
+                variant="contained"
+                color="primary"
+                onClick={handleRegister}
+                disabled={!isCardDetailsValid()}
               >
-                Tarjeta
+                Confirmar Pago con Tarjeta
               </Button>
+            </Box>
+          )}
+          {paymentMethod === 'transfer' && (
+            <Box mt={2}>
+              <TextField
+                label="Cédula"
+                name="cedula"
+                fullWidth
+                onChange={handleTransferDetailsChange}
+              />
+              <TextField
+                label="IBAN"
+                name="iban"
+                fullWidth
+                onChange={handleTransferDetailsChange}
+              />
+              <TextField
+                label="Monto"
+                name="monto"
+                fullWidth
+                onChange={handleTransferDetailsChange}
+              />
               <Button
-                onClick={() => handlePaymentMethodChange('transfer')}
-                disabled={!requirementsMet || scheduleConflict}
+                variant="contained"
+                color="primary"
+                onClick={handleRegister}
+                disabled={!isTransferDetailsValid()}
               >
-                Transferencia
+                Confirmar Pago por Transferencia
               </Button>
-            </ButtonGroup>
-            {paymentMethod === 'card' && (
-              <Box sx={{ mt: 2 }}>
-                <TextField
-                  name="encargado"
-                  label="Nombre del Encargado"
-                  value={cardDetails.encargado}
-                  onChange={handleCardDetailsChange}
-                  fullWidth
-                />
-                <TextField
-                  name="numeroTarjeta"
-                  label="Número de Tarjeta"
-                  value={cardDetails.numeroTarjeta}
-                  onChange={handleCardDetailsChange}
-                  fullWidth
-                  type="number"
-                />
-                <TextField
-                  name="vencimiento"
-                  label="Fecha de Vencimiento"
-                  value={cardDetails.vencimiento}
-                  onChange={handleCardDetailsChange}
-                  fullWidth
-                />
-                <TextField
-                  name="cvv"
-                  label="CVV"
-                  value={cardDetails.cvv}
-                  onChange={handleCardDetailsChange}
-                  fullWidth
-                  type="number"
-                />
-              </Box>
-            )}
-            {paymentMethod === 'transfer' && (
-              <Box sx={{ mt: 2 }}>
-                <TextField
-                  name="cedula"
-                  label="Cédula"
-                  value={transferDetails.cedula}
-                  onChange={handleTransferDetailsChange}
-                  fullWidth
-                />
-                <TextField
-                  name="iban"
-                  label="IBAN"
-                  value={transferDetails.iban}
-                  onChange={handleTransferDetailsChange}
-                  fullWidth
-                />
-                <TextField
-                  name="monto"
-                  label="Monto"
-                  value={transferDetails.monto}
-                  onChange={handleTransferDetailsChange}
-                  fullWidth
-                  type="number"
-                />
-              </Box>
-            )}
-          </Box>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button
-            onClick={handleRegister}
-            disabled={!requirementsMet || !paymentMethod || (paymentMethod === 'card' ? !isCardDetailsValid() : !isTransferDetailsValid()) || scheduleConflict}
-          >
-            Confirmar
+          <Button onClick={() => setOpen(false)} color="primary">
+            Cancelar
           </Button>
         </DialogActions>
       </Dialog>
+      <Typography variant="h5" gutterBottom>
+        Cursos Matriculados
+      </Typography>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <StyledTableCell>Curso</StyledTableCell>
+              <StyledTableCell>Grupo</StyledTableCell>
+              <StyledTableCell>Aula</StyledTableCell>
+              <StyledTableCell>Horario</StyledTableCell>
+              <StyledTableCell>Precio</StyledTableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {enrolledCourses.map((course) => (
+              <StyledTableRow key={course.curso_id}>
+                <StyledTableCell>{course.nombre_curso}</StyledTableCell>
+                <StyledTableCell>{course.grupo_id}</StyledTableCell>
+                <StyledTableCell>{course.aula}</StyledTableCell>
+                <StyledTableCell>{course.horario}</StyledTableCell>
+                <StyledTableCell>{course.precio}</StyledTableCell>
+              </StyledTableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
   );
 };
