@@ -11,6 +11,8 @@ import Students from './components/Students';
 import RegistrationAdm from './components/RegistrationAdm';
 import Requirements from './components/Requirements';
 import CourseStatus from './components/CourseStatus';
+import Tickets from './components/Tickets';
+import MentorResponses from './components/MentorResponses';
 
 
 // Enrutamiento
@@ -24,7 +26,9 @@ const ROUTES = {
   PLAN_ADMIN: '/StudyAdm',
   STUDENTS: '/Students',
   REQUIREMENTS: '/Requirements',
-  COURSESTATUS: '/CourseStatus'
+  COURSESTATUS: '/CourseStatus',
+  TICKETS: '/Tickets',
+  MENTORRESPONSES: '/MentorResponses'
 };
 
 function App() {
@@ -42,6 +46,8 @@ function App() {
           <Route path={ROUTES.REGISTRATIONADM} element={<RegistrationAdm/>}/>
           <Route path={ROUTES.REQUIREMENTS}  element={<Requirements/>}/>
           <Route path={ROUTES.COURSESTATUS}  element={<CourseStatus />}/>
+          <Route path={ROUTES.TICKETS}  element={<Tickets/>}/>
+          <Route path={ROUTES.MENTORRESPONSES}  element={<MentorResponses/>}/>
         </Routes>
       </Router>
 

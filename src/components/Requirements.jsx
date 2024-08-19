@@ -1,23 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../supabase/client'; // Asegúrate de que la ruta sea correcta
+import { supabase } from '../supabase/client';
 import { styled } from '@mui/material/styles';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell, { tableCellClasses } from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
+import {
+  Table, TableBody, TableCell, TableContainer, TableHead,
+  TableRow, Paper, Button, Checkbox, TextField, Box, Alert, IconButton
+} from '@mui/material';
 import { green, red } from '@mui/material/colors';
-import TextField from '@mui/material/TextField';
-import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert'; // Asegúrate de que has importado Alert
+import DeleteIcon from '@mui/icons-material/Delete';
+import { tableCellClasses } from '@mui/material/TableCell'; // Añadida importación
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
-    backgroundColor: theme.palette.common.black,
+    backgroundColor: theme.palette.primary.main,
     color: theme.palette.common.white,
   },
   [`&.${tableCellClasses.body}`]: {
@@ -37,7 +31,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 const Requirements = () => {
   const [requirements, setRequirements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [notFoundMessage, setNotFoundMessage] = useState(null); // Estado para el mensaje de no encontrado
+  const [notFoundMessage, setNotFoundMessage] = useState(null);
   const [newRequirement, setNewRequirement] = useState({
     ID_Curso: '',
     Carnet_Estudiante: '',
@@ -46,7 +40,6 @@ const Requirements = () => {
 
   const fetchRequirements = async () => {
     setLoading(true);
-
     const { data, error } = await supabase
       .from('Requisitos')
       .select('ID_Curso, Carnet_Estudiante, Estado');
@@ -77,8 +70,7 @@ const Requirements = () => {
   };
 
   const handleDeleteRequirement = async (id) => {
-    setNotFoundMessage(null); // Limpiar el mensaje de no encontrado
-
+    setNotFoundMessage(null);
     const { data, error } = await supabase
       .from('Requisitos')
       .delete()
@@ -111,16 +103,16 @@ const Requirements = () => {
   }, []);
 
   if (loading) return <p>Loading...</p>;
-  
+
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 3 }}>
       {notFoundMessage && (
         <Alert severity="warning" sx={{ mb: 2 }}>
           {notFoundMessage}
         </Alert>
       )}
       <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 700 }} aria-label="customized table">
+        <Table sx={{ minWidth: 650 }} aria-label="customized table">
           <TableHead>
             <TableRow>
               <StyledTableCell>ID Curso</StyledTableCell>
@@ -149,20 +141,19 @@ const Requirements = () => {
                   />
                 </StyledTableCell>
                 <StyledTableCell align="right">
-                  <Button
-                    variant="contained"
+                  <IconButton
                     color="error"
                     onClick={() => handleDeleteRequirement(requirement.ID_Curso)}
                   >
-                    Eliminar
-                  </Button>
+                    <DeleteIcon />
+                  </IconButton>
                 </StyledTableCell>
               </StyledTableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-      <Box sx={{ mt: 2 }}>
+      <Box sx={{ mt: 3 }}>
         <TextField
           label="ID Curso"
           variant="outlined"
@@ -179,20 +170,24 @@ const Requirements = () => {
           fullWidth
           sx={{ mb: 2 }}
         />
-        <Checkbox
-          checked={newRequirement.Estado}
-          onChange={(e) => setNewRequirement({ ...newRequirement, Estado: e.target.checked })}
-          sx={{
-            color: newRequirement.Estado ? green[600] : red[600],
-            '&.Mui-checked': {
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Checkbox
+            checked={newRequirement.Estado}
+            onChange={(e) => setNewRequirement({ ...newRequirement, Estado: e.target.checked })}
+            sx={{
               color: newRequirement.Estado ? green[600] : red[600],
-            },
-          }}
-        />
+              '&.Mui-checked': {
+                color: newRequirement.Estado ? green[600] : red[600],
+              },
+            }}
+          />
+          <span>Estado</span>
+        </Box>
         <Button
           variant="contained"
           color="primary"
           onClick={handleAddRequirement}
+          sx={{ mt: 1 }}
         >
           Agregar Requisito
         </Button>

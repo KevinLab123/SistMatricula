@@ -84,7 +84,9 @@ const ROUTES = {
   PLAN_ADMIN: '/StudyAdm',
   STUDENTS: '/Students',
   REQUIREMENTS: '/requirements',
-  COURSESTATUS: '/CourseStatus'
+  COURSESTATUS: '/CourseStatus',
+  TICKETS: '/Tickets',
+  MENTORRESPONSES: '/MentorResponses'
 };
 
 const Menu = () => {
@@ -152,6 +154,14 @@ const Menu = () => {
       navigate(ROUTES.REGISTRATIONADM);
     } else {
       navigate(ROUTES.REGISTRATION);
+    }
+  };
+
+  const handleTicketsClick = () => {
+    if (userProfile === 'mentor@ulatina.net') {
+      navigate(ROUTES.MENTORRESPONSES);
+    }else{
+      navigate(ROUTES.TICKETS);
     }
   };
 
@@ -297,6 +307,14 @@ const Menu = () => {
               </StyledButton>
             </Grid>
           )}
+          <Grid item xs={12} sm={6} md={4}>
+  {userEmail !== 'academico1@ulatina.net' && userEmail !== 'admin@ulatina.net' && (
+    <StyledButton variant="contained" color="primary" onClick={handleTicketsClick} fullWidth>
+      Tickets
+    </StyledButton>
+  )}
+</Grid>
+
         </Grid>
       </StyledContainer>
     </ThemeProvider>
