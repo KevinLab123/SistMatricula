@@ -10,6 +10,7 @@ import StudyAdm from './components/StudyAdm';
 import Students from './components/Students';
 import RegistrationAdm from './components/RegistrationAdm';
 import Requirements from './components/Requirements';
+import CourseStatus from './components/CourseStatus';
 
 
 // Enrutamiento
@@ -22,7 +23,8 @@ const ROUTES = {
   COURSES: '/Courses',
   PLAN_ADMIN: '/StudyAdm',
   STUDENTS: '/Students',
-  REQUIREMENTS: '/Requirements'
+  REQUIREMENTS: '/Requirements',
+  COURSESTATUS: '/CourseStatus'
 };
 
 function App() {
@@ -39,6 +41,7 @@ function App() {
           <Route path={ROUTES.STUDENTS} element={<Students />}/>
           <Route path={ROUTES.REGISTRATIONADM} element={<RegistrationAdm/>}/>
           <Route path={ROUTES.REQUIREMENTS}  element={<Requirements/>}/>
+          <Route path={ROUTES.COURSESTATUS}  element={<CourseStatus />}/>
         </Routes>
       </Router>
 

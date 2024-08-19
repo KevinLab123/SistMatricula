@@ -84,6 +84,7 @@ const ROUTES = {
   PLAN_ADMIN: '/StudyAdm',
   STUDENTS: '/Students',
   REQUIREMENTS: '/requirements',
+  COURSESTATUS: '/CourseStatus'
 };
 
 const Menu = () => {
@@ -162,6 +163,12 @@ const Menu = () => {
     }
   };
 
+  const handleStatusClick = () => {
+    if (userProfile === 'academico1@ulatina.net') {
+      navigate(ROUTES.COURSESTATUS);
+    }
+  };
+
   const handleCursosClick = () => {
     navigate(ROUTES.COURSES);
   };
@@ -207,6 +214,7 @@ const Menu = () => {
               { text: 'Plan de Estudios', onClick: handlePlanClick },
               userProfile === 'admin@ulatina.net' && { text: 'Estudiantes', onClick: handleEstudiantesClick },
               userEmail === 'mentor@ulatina.net' && { text: 'Requisitos', onClick: handleRequirementsClick },
+              userEmail === 'academico1@ulatina.net' && { text: 'Estado De Cursos', onClick: handleStatusClick },
               { text: 'Cerrar Sesión', onClick: handleLogout }, // New option added
             ].map((item, index) => (
               item && (
@@ -279,6 +287,13 @@ const Menu = () => {
             <Grid item xs={12} sm={6} md={4}>
               <StyledButton variant="contained" color="primary" onClick={handleRequirementsClick} fullWidth>
                 Requisitos
+              </StyledButton>
+            </Grid>
+          )}
+          {userEmail === 'academico1@ulatina.net' && (
+            <Grid item xs={12} sm={6} md={4}>
+              <StyledButton variant="contained" color="primary" onClick={handleStatusClick} fullWidth>
+                Estado De Cursos
               </StyledButton>
             </Grid>
           )}
