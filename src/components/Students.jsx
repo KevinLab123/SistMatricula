@@ -16,12 +16,16 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Typography,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
-    backgroundColor: theme.palette.common.black,
+    backgroundColor: theme.palette.primary.main,
     color: theme.palette.common.white,
+    fontWeight: "bold",
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
@@ -59,13 +63,15 @@ const Students = () => {
     let unique = false;
     let carnet = "";
     while (!unique) {
-      const randomDigits = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+      const randomDigits = Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, "0");
       carnet = "2024731" + randomDigits;
       const { data, error } = await supabase
         .from("Estudiantes")
         .select("Carnet")
         .eq("Carnet", carnet);
-      
+
       if (error) {
         console.error("Error checking carnet uniqueness:", error);
       } else if (data.length === 0) {
@@ -80,7 +86,9 @@ const Students = () => {
     try {
       const { data, error } = await supabase
         .from("Estudiantes")
-        .select("Carnet, Nombre, Apellido, Correo_Institucional, Correo, Telefono");
+        .select(
+          "Carnet, Nombre, Apellido, Correo_Institucional, Correo, Telefono"
+        );
 
       if (error) throw error;
 
@@ -120,20 +128,20 @@ const Students = () => {
           },
         ]);
 
-      const { error: profileError } = await supabase
-        .from("Perfiles")
-        .insert([
-          {
-            id: newStudent.Carnet,
-            Usuario: `${newStudent.Nombre} ${newStudent.Apellido}`,
-            Email: newStudent.Correo,
-            Contraseña: newStudent.Contraseña,
-            rol: "Estudiante",
-          },
-        ]);
+      const { error: profileError } = await supabase.from("Perfiles").insert([
+        {
+          id: newStudent.Carnet,
+          Usuario: `${newStudent.Nombre} ${newStudent.Apellido}`,
+          Email: newStudent.Correo,
+          Contraseña: newStudent.Contraseña,
+          rol: "Estudiante",
+        },
+      ]);
 
       if (studentError || profileError) {
-        throw new Error(studentError ? studentError.message : profileError.message);
+        throw new Error(
+          studentError ? studentError.message : profileError.message
+        );
       }
 
       setStudents([
@@ -174,21 +182,23 @@ const Students = () => {
         .from("Estudiantes")
         .delete()
         .eq("Carnet", deleteStudentCode);
-  
+
       const { data: profileData, error: profileError } = await supabase
         .from("Perfiles")
         .delete()
         .eq("id", deleteStudentCode);
-  
+
       if (studentError || profileError) {
-        throw new Error(studentError ? studentError.message : profileError.message);
+        throw new Error(
+          studentError ? studentError.message : profileError.message
+        );
       }
-  
+
       if (studentData.length === 0 && profileData.length === 0) {
         // No se encontraron registros para eliminar
         return;
       }
-  
+
       setStudents(
         students.filter((student) => student.Carnet !== deleteStudentCode)
       );
@@ -201,7 +211,6 @@ const Students = () => {
       setConfirmDelete(false);
     }
   };
-  
 
   const handleConfirmDelete = () => {
     handleDeleteStudent();
@@ -214,45 +223,64 @@ const Students = () => {
   if (loading) return <p>Loading...</p>;
 
   return (
-    <TableContainer component={Paper}>
-      <Table sx={{ minWidth: 700 }} aria-label="customized table">
-        <TableHead>
-          <TableRow>
-            <StyledTableCell>Carnet</StyledTableCell>
-            <StyledTableCell align="right">Nombre</StyledTableCell>
-            <StyledTableCell align="right">Apellido</StyledTableCell>
-            <StyledTableCell align="right">Telefono</StyledTableCell>
-            <StyledTableCell align="right">Correo Institucional</StyledTableCell>
-            <StyledTableCell align="right">Correo</StyledTableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {students.map((student, index) => (
-            <StyledTableRow key={index}>
-              <StyledTableCell component="th" scope="row">
-                {student.Carnet}
+    <Box p={3}>
+      <Typography variant="h4" gutterBottom align="center" color="primary">
+        Lista de Estudiantes
+      </Typography>
+
+      <TableContainer component={Paper} elevation={3} sx={{ borderRadius: 2 }}>
+        <Table aria-label="customized table">
+          <TableHead>
+            <TableRow>
+              <StyledTableCell>Carnet</StyledTableCell>
+              <StyledTableCell align="right">Nombre</StyledTableCell>
+              <StyledTableCell align="right">Apellido</StyledTableCell>
+              <StyledTableCell align="right">Telefono</StyledTableCell>
+              <StyledTableCell align="right">
+                Correo 
               </StyledTableCell>
-              <StyledTableCell align="right">{student.Nombre}</StyledTableCell>
-              <StyledTableCell align="right">{student.Apellido}</StyledTableCell>
-              <StyledTableCell align="right">{student.Telefono}</StyledTableCell>
-              <StyledTableCell align="right">{student.Correo_Institucional}</StyledTableCell>
-              <StyledTableCell align="right">{student.Correo}</StyledTableCell>
-            </StyledTableRow>
-          ))}
-        </TableBody>
-      </Table>
+              <StyledTableCell align="right">Correo Institucional </StyledTableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {students.map((student, index) => (
+              <StyledTableRow key={index}>
+                <StyledTableCell component="th" scope="row">
+                  {student.Carnet}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  {student.Nombre}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  {student.Apellido}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  {student.Telefono}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  {student.Correo_Institucional}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  {student.Correo}
+                </StyledTableCell>
+              </StyledTableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <Box
         display="flex"
         justifyContent="center"
         gap={2}
-        marginTop={2}
+        marginTop={3}
         padding={2}
       >
         <Button
           variant="contained"
           color="success"
           onClick={handleAddStudent}
+          startIcon={<AddIcon />}
         >
           Agregar
         </Button>
@@ -296,18 +324,10 @@ const Students = () => {
               setNewStudent({ ...newStudent, Telefono: e.target.value })
             }
           />
+
           <TextField
             margin="dense"
-            label="Correo Institucional"
-            fullWidth
-            value={newStudent.Correo}
-            onChange={(e) =>
-              setNewStudent({ ...newStudent, Correo: e.target.value })
-            }
-          />
-          <TextField
-            margin="dense"
-            label="Correo"
+            label="Correo "
             fullWidth
             value={newStudent.Correo_Institucional}
             onChange={(e) =>
@@ -317,6 +337,16 @@ const Students = () => {
               })
             }
           />
+          <TextField
+            margin="dense"
+            label="Correo Institucional"
+            fullWidth
+            value={newStudent.Correo}
+            onChange={(e) =>
+              setNewStudent({ ...newStudent, Correo: e.target.value })
+            }
+          />
+
           <TextField
             margin="dense"
             label="Contraseña"
@@ -330,7 +360,13 @@ const Students = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button onClick={confirmAddStudent}>Confirmar</Button>
+          <Button
+            onClick={confirmAddStudent}
+            variant="contained"
+            color="primary"
+          >
+            Confirmar
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -338,15 +374,21 @@ const Students = () => {
         display="flex"
         justifyContent="center"
         gap={2}
-        marginTop={2}
+        marginTop={3}
         padding={2}
       >
         <TextField
           label="Carnet del Estudiante a Eliminar"
           value={deleteStudentCode}
           onChange={(e) => setDeleteStudentCode(e.target.value)}
+          variant="outlined"
         />
-        <Button variant="outlined" color="error" onClick={confirmDeleteStudent}>
+        <Button
+          variant="contained"
+          color="error"
+          onClick={confirmDeleteStudent}
+          startIcon={<DeleteIcon />}
+        >
           Eliminar
         </Button>
       </Box>
@@ -354,19 +396,23 @@ const Students = () => {
       <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
         <DialogTitle>Confirmar Eliminación</DialogTitle>
         <DialogContent>
-          <p>
+          <Typography variant="body1">
             ¿Está seguro de que desea eliminar al estudiante con carnet{" "}
             {deleteStudentCode}?
-          </p>
+          </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmDelete(false)}>Cancelar</Button>
-          <Button onClick={handleConfirmDelete} color="error">
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+          >
             Eliminar
           </Button>
         </DialogActions>
       </Dialog>
-    </TableContainer>
+    </Box>
   );
 };
 
